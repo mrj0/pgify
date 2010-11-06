@@ -451,12 +451,12 @@ data_item
    ================================================================================ */
 update_statement
 	: K_UPDATE ( K_ONLY LPAREN dml_table_expression_clause RPAREN | dml_table_expression_clause) t_alias?
-		update_set_clause where_clause? returning_clause? error_logging_clause?
+		K_SET update_set_clause ( ',' update_set_clause )* where_clause? returning_clause? error_logging_clause?
 		SEMI?
 	;
 
 update_set_clause
-	: K_SET
+	: 
         (
             K_VALUE LPAREN t_alias RPAREN EQ ( simple_expression | LPAREN subquery RPAREN)
         |	(
@@ -2173,8 +2173,16 @@ BACKQUOTED_STRING
 	{
 		pANTLR3_STRING str = GETTEXT();
 		str = str->subString(str, 1, str->len - 1);
-		//str->insert(str, 0, "\"");
-		//str->append(str, "\"");
+		str->insert(str, 0, "\"");
+		str->append(str, "\"");
+		
+		// mysql backticks are case-insensitive
+		str = str->toUTF8(str);
+		//printf("\%s len \%i\n", str->chars, str->len);
+		gchar *lower = g_utf8_strdown(str->chars, -1);
+		str->set(str, lower);
+		g_free(lower);
+		
 		SETTEXT(str);
 	}
 	;
