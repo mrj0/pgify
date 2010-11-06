@@ -7,7 +7,7 @@ DROP database \`import\`;
 EOF
 
 cat > "$expected" <<EOF
-DROP SCHEMA import;
+DROP SCHEMA "import";
 EOF
 
 pgify

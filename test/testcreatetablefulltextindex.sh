@@ -28,22 +28,22 @@ CREATE TABLE \`serendipity_entries\` (
 EOF
 
 cat > "$expected" <<EOF
-CREATE TABLE serendipity_entries (
-  id int NOT NULL ,
-  title varchar(200) DEFAULT NULL,
-  timestamp int  DEFAULT NULL,
-  body text,
-  comments int  DEFAULT E'0',
-  trackbacks int  DEFAULT E'0',
-  extended text,
-  exflag int DEFAULT NULL,
-  author varchar(20) DEFAULT NULL,
-  authorid int DEFAULT NULL,
-  isdraft text CHECK ( isdraft IN (E'true',E'false')) NOT NULL DEFAULT E'true',
-  allow_comments text CHECK ( allow_comments IN (E'true',E'false')) NOT NULL DEFAULT E'true',
-  last_modified int  DEFAULT NULL,
-  moderate_comments text CHECK ( moderate_comments IN (E'true',E'false')) NOT NULL DEFAULT E'true',
-  PRIMARY KEY (id)
+CREATE TABLE "serendipity_entries" (
+  "id" int NOT NULL ,
+  "title" varchar(200) DEFAULT NULL,
+  "timestamp" int  DEFAULT NULL,
+  "body" text,
+  "comments" int  DEFAULT E'0',
+  "trackbacks" int  DEFAULT E'0',
+  "extended" text,
+  "exflag" int DEFAULT NULL,
+  "author" varchar(20) DEFAULT NULL,
+  "authorid" int DEFAULT NULL,
+  "isdraft" text CHECK ( "isdraft" IN (E'true',E'false')) NOT NULL DEFAULT E'true',
+  "allow_comments" text CHECK ( "allow_comments" IN (E'true',E'false')) NOT NULL DEFAULT E'true',
+  "last_modified" int  DEFAULT NULL,
+  "moderate_comments" text CHECK ( "moderate_comments" IN (E'true',E'false')) NOT NULL DEFAULT E'true',
+  PRIMARY KEY ("id")
     
     
     
@@ -51,12 +51,12 @@ CREATE TABLE serendipity_entries (
      
 )    ;
 
-CREATE INDEX serendipity_entries_date_idx_index ON serendipity_entries  ( timestamp ) ;
-CREATE INDEX serendipity_entries_mod_idx_index ON serendipity_entries  ( last_modified ) ;
-CREATE INDEX serendipity_entries_edraft_idx_index ON serendipity_entries  ( isdraft ) ;
-CREATE INDEX serendipity_entries_eauthor_idx_index ON serendipity_entries  ( authorid ) ;
+CREATE INDEX serendipity_entries_date_idx_index ON "serendipity_entries"  ( "timestamp" ) ;
+CREATE INDEX serendipity_entries_mod_idx_index ON "serendipity_entries"  ( "last_modified" ) ;
+CREATE INDEX serendipity_entries_edraft_idx_index ON "serendipity_entries"  ( "isdraft" ) ;
+CREATE INDEX serendipity_entries_eauthor_idx_index ON "serendipity_entries"  ( "authorid" ) ;
 CREATE SEQUENCE serendipity_entries_id_seq START 16 ;
-ALTER TABLE serendipity_entries ALTER COLUMN id SET DEFAULT NEXTVAL ( 'serendipity_entries_id_seq' ) ;
+ALTER TABLE "serendipity_entries" ALTER COLUMN "id" SET DEFAULT NEXTVAL ( 'serendipity_entries_id_seq' ) ;
 EOF
 
 pgify

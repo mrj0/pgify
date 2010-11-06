@@ -132,13 +132,6 @@ int ANTLR3_CDECL main(int argc, char **argv) {
 
     pANTLR3_BASE_TREE_ADAPTOR adaptor = psr->adaptor;
 
-    /* int tp; */
-    /* for(tp = 0; tp < tokens->count; tp++) { */
-    /*     pANTLR3_COMMON_TOKEN t = (pANTLR3_COMMON_TOKEN) tokens->get(tokens, tp); */
-    /*     if(t->channel == HIDDEN) */
-    /*         printf("%s", t->getText(t)->chars); */
-    /* } */
-
     // If the parser ran correctly, we will have a tree to parse. In general I recommend
     // keeping your own flags as part of the error trapping, but here is how you can
     // work out if there were errors if you are using the generic error messages
@@ -262,13 +255,6 @@ static gchar* read_stdin() {
 
     return buffer->str;
 }
-
-static void indent(int level) {
-    int i;
-    level += 2;
-    for(i = 0; i < level; i++)
-        fprintf(stderr, "   ");
-};
 
 extern pANTLR3_UINT8  mysqlParserTokenNames[];
 
@@ -806,6 +792,14 @@ static void lock_tables_worker(WalkerState ws, pANTLR3_BASE_TREE basetree, pANTL
 }
 
 
+static void indent(int level) {
+    int i;
+    level += 2;
+    for(i = 0; i < level; i++)
+        fprintf(stderr, "   ");
+};
+
+
 static void TreeWalkWorker(WalkerState ws, pANTLR3_BASE_TREE p, int level) {
     ANTLR3_UINT32 n = 0, c = 0;
     
@@ -868,23 +862,6 @@ static void TreeWalkWorker(WalkerState ws, pANTLR3_BASE_TREE p, int level) {
     }
 }
 
-/* static void advance(unsigned line, unsigned int pos, const char *str) { */
-/*     static unsigned cline = 1, cpos=-1; */
-    
-/*     while(cline < line) { */
-/*         printf("\n"); */
-/*         cline++; */
-/*         cpos = 0; */
-/*     } */
-
-/*     while(cpos < pos) { */
-/*         printf(" "); */
-/*         cpos++; */
-/*     } */
-
-/*     printf("%s", str); */
-/*     cpos += strlen(str); */
-/* }; */
 
 static void advance(pANTLR3_BASE_TREE child, pANTLR3_VECTOR tokens, int *tokenIndex) {
     int line = child->getLine(child);
@@ -943,12 +920,8 @@ static void TreeWalkPrinter(pANTLR3_BASE_TREE p, pANTLR3_VECTOR tokens, int *tok
             TreeWalkPrinter(child, tokens, tokenIndex);
         }
         else {
-            if(TokenType != ANTLR3_TOKEN_EOF) {
+            if(TokenType != ANTLR3_TOKEN_EOF)
                 advance(child, tokens, tokenIndex);
-                /* advance(child->getLine(child), */
-                /*         child->getCharPositionInLine(child), */
-                /*         child->getText(child)->chars); */
-            }
         }
     }
 };

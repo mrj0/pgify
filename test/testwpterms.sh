@@ -44,20 +44,20 @@ CREATE TABLE \`wp_terms\` (
 EOF
 
 cat > "$expected" <<EOF
-DROP TABLE wp_terms;
-CREATE TABLE wp_terms (
-  term_id bigint  NOT NULL ,
-  name varchar(200) NOT NULL DEFAULT E'',
-  slug varchar(200) NOT NULL DEFAULT E'',
-  term_group bigint NOT NULL DEFAULT E'0',
-  PRIMARY KEY (term_id),
-  UNIQUE   (slug)
+DROP TABLE "wp_terms";
+CREATE TABLE "wp_terms" (
+  "term_id" bigint  NOT NULL ,
+  "name" varchar(200) NOT NULL DEFAULT E'',
+  "slug" varchar(200) NOT NULL DEFAULT E'',
+  "term_group" bigint NOT NULL DEFAULT E'0',
+  PRIMARY KEY ("term_id"),
+  UNIQUE   ("slug")
        /* my addition */
 )    ;
 
-CREATE INDEX wp_terms_name_index ON wp_terms  USING HASH  ( name ) ;
+CREATE INDEX wp_terms_name_index ON "wp_terms"  USING HASH  ( "name" ) ;
 CREATE SEQUENCE wp_terms_term_id_seq START 9 ;
-ALTER TABLE wp_terms ALTER COLUMN term_id SET DEFAULT NEXTVAL ( 'wp_terms_term_id_seq' ) ;
+ALTER TABLE "wp_terms" ALTER COLUMN "term_id" SET DEFAULT NEXTVAL ( 'wp_terms_term_id_seq' ) ;
 EOF
 
 pgify

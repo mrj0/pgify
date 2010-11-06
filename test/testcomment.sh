@@ -7,7 +7,7 @@ INSERT INTO \`serendipity_comments\` VALUES (1,3,0,1228270686,'','Mike','someema
 EOF
 
 cat > "$expected" <<EOF
-INSERT INTO serendipity_comments VALUES (1,3,0,1228270686,E'',E'Mike',E'someemail@miketec.org',E'http://www.miketec.org/serendipity/',E'76.174.157.177',E'I\'ve managed to fix some of these problems, mostly by abusing the floating property. Will post an update.',E'NORMAL',E'false',E'approved',E'http://www.miketec.org/serendipity/serendipity_admin.php');
+INSERT INTO "serendipity_comments" VALUES (1,3,0,1228270686,E'',E'Mike',E'someemail@miketec.org',E'http://www.miketec.org/serendipity/',E'76.174.157.177',E'I\'ve managed to fix some of these problems, mostly by abusing the floating property. Will post an update.',E'NORMAL',E'false',E'approved',E'http://www.miketec.org/serendipity/serendipity_admin.php');
 EOF
 
 pgify

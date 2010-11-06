@@ -24,28 +24,28 @@ CREATE TABLE \`jos_components\` (
 EOF
 
 cat > "$expected" <<EOF
-CREATE TABLE jos_components (
-  id int NOT NULL ,
-  name varchar(50) NOT NULL DEFAULT E'',
-  link varchar(255) NOT NULL DEFAULT E'',
-  menuid int  NOT NULL DEFAULT E'0',
-  parent int  NOT NULL DEFAULT E'0',
-  admin_menu_link varchar(255) NOT NULL DEFAULT E'',
-  admin_menu_alt varchar(255) NOT NULL DEFAULT E'',
-  option varchar(50) NOT NULL DEFAULT E'',
-  ordering int NOT NULL DEFAULT E'0',
-  admin_menu_img varchar(255) NOT NULL DEFAULT E'',
-  iscore SMALLINT NOT NULL DEFAULT E'0',
-  params text NOT NULL,
-  enabled SMALLINT NOT NULL DEFAULT E'1',
-  PRIMARY KEY (id)
-    
+CREATE TABLE "jos_components" (
+  "id" int NOT NULL ,
+  "name" varchar(50) NOT NULL DEFAULT E'',
+  "link" varchar(255) NOT NULL DEFAULT E'',
+  "menuid" int  NOT NULL DEFAULT E'0',
+  "parent" int  NOT NULL DEFAULT E'0',
+  "admin_menu_link" varchar(255) NOT NULL DEFAULT E'',
+  "admin_menu_alt" varchar(255) NOT NULL DEFAULT E'',
+  "option" varchar(50) NOT NULL DEFAULT E'',
+  "ordering" int NOT NULL DEFAULT E'0',
+  "admin_menu_img" varchar(255) NOT NULL DEFAULT E'',
+  "iscore" SMALLINT NOT NULL DEFAULT E'0',
+  "params" text NOT NULL,
+  "enabled" SMALLINT NOT NULL DEFAULT E'1',
+  PRIMARY KEY ("id")
+      
 )    ;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
-CREATE INDEX jos_components_parent_option_index ON jos_components  ( parent asc, option desc ) ;
+CREATE INDEX jos_components_parent_option_index ON "jos_components"  ( "parent" asc, "option" desc ) ;
 CREATE SEQUENCE jos_components_id_seq START 34 ;
-ALTER TABLE jos_components ALTER COLUMN id SET DEFAULT NEXTVAL ( 'jos_components_id_seq' ) ;
+ALTER TABLE "jos_components" ALTER COLUMN "id" SET DEFAULT NEXTVAL ( 'jos_components_id_seq' ) ;
 EOF
 
 pgify

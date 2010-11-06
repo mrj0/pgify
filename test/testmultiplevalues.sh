@@ -7,7 +7,7 @@ INSERT INTO \`serendipity_access\` VALUES (0,1,'category','read',''),(0,1,'categ
 EOF
 
 cat > "$expected" <<EOF
-INSERT INTO serendipity_access VALUES (0,1,E'category',E'read',E''),(0,1,E'category',E'write',E''),(0,2,E'category',E'read',E''),(0,2,E'category',E'write',E''),(0,3,E'category',E'read',E''),(0,3,E'category',E'write',E''),(0,4,E'category',E'read',E''),(0,4,E'category',E'write',E''),(0,5,E'category',E'read',E''),(0,5,E'category',E'write',E''),(0,0,E'directory',E'read',E'tora/'),(0,0,E'directory',E'write',E'tora/');
+INSERT INTO "serendipity_access" VALUES (0,1,E'category',E'read',E''),(0,1,E'category',E'write',E''),(0,2,E'category',E'read',E''),(0,2,E'category',E'write',E''),(0,3,E'category',E'read',E''),(0,3,E'category',E'write',E''),(0,4,E'category',E'read',E''),(0,4,E'category',E'write',E''),(0,5,E'category',E'read',E''),(0,5,E'category',E'write',E''),(0,0,E'directory',E'read',E'tora/'),(0,0,E'directory',E'write',E'tora/');
 EOF
 
 pgify
