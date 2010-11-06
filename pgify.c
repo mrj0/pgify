@@ -246,9 +246,6 @@ Options:\n\
 
 #define BUF_SIZE 2048
 
-// thanks to: 
-// http://efreedom.com/Question/1-2496668/Read-STDIN-String-Variable-EOF-C
-// my C is rusty 
 static gchar* read_stdin() {
     GString *buffer = g_string_new("");
 
@@ -299,9 +296,7 @@ static int look_ahead_index(pANTLR3_BASE_TREE tree, ANTLR3_UINT32 from, ANTLR3_U
 
 
 /**
- * search the tree for the specified token and return the position.
- *
- * does not descend
+ * search the tree for the specified token and return the index.
  *
  */
 static int look_ahead_down(pANTLR3_BASE_TREE tree, ANTLR3_UINT32 from, ANTLR3_UINT32 lookfor) {
@@ -334,6 +329,10 @@ static void print_postbuf(GString *postbuf) {
 }
 
 
+/**
+ * Remove quotes from a string. Returned string must be released with g_free().
+ *
+ */
 static gchar* unquote(const gchar *string) {
     static GRegex *pattern = NULL;
     static gsize initialized = 0;
@@ -366,7 +365,7 @@ static gchar* create_table_tablename(pANTLR3_BASE_TREE base) {
         child = base->getChild(base, c);
         childType = child->getType(child);
         if(childType == ID)
-            return unquote(child->toString(child)->chars);
+            return child->toString(child)->chars;
     }
 
     return 0;
@@ -392,6 +391,7 @@ static void create_table_index(WalkerState ws, pANTLR3_BASE_TREE base) {
     int pos = 0;
 
     gchar *tablename = create_table_tablename(base);
+    gchar *utablename = unquote(tablename);
 
     while((pos = look_ahead_index(base, 0, T_CREATE_TABLE_INDEX)) > -1) {
         int p;
@@ -427,13 +427,13 @@ static void create_table_index(WalkerState ws, pANTLR3_BASE_TREE base) {
                 /* found an ID. If we haven't already started building
                  * columns, then this must be the index name */
                 if(!name && columns->len < 1)
-                    name = unquote(index->toString(index)->chars);
+                    name = index->toString(index)->chars;
                 else {
                     if(columns->len > 0)
                         g_string_append(columns, ", ");
                     g_string_append(columns, index->toString(index)->chars);
                     if(firstcolumn == 0)
-                        firstcolumn = unquote(index->toString(index)->chars);
+                        firstcolumn = index->toString(index)->chars;
                 }
             }
             else if(t == K_ASC || t == K_DESC) {
@@ -445,12 +445,14 @@ static void create_table_index(WalkerState ws, pANTLR3_BASE_TREE base) {
 
         if(name == 0)
             name = firstcolumn;
+        name = unquote(name);
         g_string_append_printf(ws->postbuf,
                                "%s_%s_index ON %s%s ",
-                               tablename,
+                               utablename,
                                name,
                                ws->schemaName,
                                tablename);
+        g_free(name);
 
         if(indexType != 0)
             g_string_append_printf(ws->postbuf, " USING %s ", indexType);
@@ -464,6 +466,8 @@ static void create_table_index(WalkerState ws, pANTLR3_BASE_TREE base) {
         if(child->getType(child) == COMMA)
             base->deleteChild(base, pos - 1);
     }
+
+    g_free(utablename);
 }
 
 
@@ -474,6 +478,7 @@ static void create_table_rewrite_auto_inc(WalkerState ws, pANTLR3_BASE_TREE base
     id = NULL;
 
     gchar *tablename = create_table_tablename(tree);
+    gchar *utablename = unquote(tablename);
 
     n = tree->getChildCount(tree);
 
@@ -516,10 +521,12 @@ static void create_table_rewrite_auto_inc(WalkerState ws, pANTLR3_BASE_TREE base
         //   create sequence wp_terms_term_id_seq;
         //   alter table "wp_terms" alter column "term_id" set default nextval('wp_terms_term_id_seq');
 
+        gchar *uid = unquote(id->toString(id)->chars);
         gchar *sequence = g_strdup_printf(
             "%s_%s_seq",
-            unquote(tablename),
-            unquote(id->toString(id)->chars));
+            utablename,
+            uid);
+        g_free(uid);
 
         g_string_append_printf(ws->postbuf, "CREATE SEQUENCE %s%s START %s ;\n", ws->schemaName, sequence, autoincstart);
 
@@ -535,6 +542,8 @@ static void create_table_rewrite_auto_inc(WalkerState ws, pANTLR3_BASE_TREE base
 
         child->deleteChild(child, incpos);
     }
+
+    g_free(utablename);
 }
 
 
@@ -671,6 +680,7 @@ static void create_rewrite_enum(WalkerState ws, pANTLR3_BASE_TREE base) {
 
 static void create_table_rewrite_onupdate(WalkerState ws, pANTLR3_BASE_TREE base) {
     gchar *tablename = create_table_tablename(base);
+    gchar *utablename = unquote(tablename);
 
     static const char *tfunction = 
         "CREATE OR REPLACE FUNCTION %s%s_update_%s()\n"
@@ -707,13 +717,18 @@ static void create_table_rewrite_onupdate(WalkerState ws, pANTLR3_BASE_TREE base
                     g_string_append_printf(expr, " %s ", child->getText(child)->chars);
             }
 
-            g_string_append_printf(ws->postbuf, tfunction, ws->schemaName, tablename, name->chars, name->chars, expr->str);
-            g_string_append_printf(ws->postbuf, ttrigger, tablename, name->chars, ws->schemaName, tablename, ws->schemaName, tablename, name->chars);
+            gchar *uname = unquote(name->chars);
+
+            g_string_append_printf(ws->postbuf, tfunction, ws->schemaName, utablename, uname, name->chars, expr->str);
+            g_string_append_printf(ws->postbuf, ttrigger, utablename, uname, ws->schemaName, tablename, ws->schemaName, utablename, uname);
             g_string_free(expr, TRUE);
 
+            g_free(uname);
             def->deleteChild(def, pos);
         }
     }
+
+    g_free(utablename);
 }
 
 
