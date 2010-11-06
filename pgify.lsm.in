@@ -1,0 +1,21 @@
+Begin3
+Title:		pgify
+Version:	@VERSION@
+Entered-date:	@ISODATE@
+Description:	A C library to transform MySQL SQL dialect to PostgreSQL.
+		@configure_input@
+		Please edit pgify.lsm.in to fix the Keywords and
+		Primary-site entries, add several more lines of
+		description here if appropriate, and to delete these
+		instructions.
+Keywords:	[substitute your keywords here]
+Author: 	mike@publicstatic.net (Mike Johnson)
+Maintained-by:	mike@publicstatic.net (Mike Johnson)
+Primary-site:	metlab.unc.edu pub/Linux/apps/some/directory
+		31k pgify-@VERSION@.tar.gz
+		500  pgify.lsm
+Alternate-site: 
+Original-site:  
+Platforms:      
+Copying-policy:	GNU copyleft
+End
