@@ -1,11 +1,13 @@
-BUILT_SOURCES = mysqlLexer.c mysqlLexer.h \
-	mysqlParser.c mysqlParser.h
+BUILT_SOURCES = mysqlLexer.c mysqlParser.c 
 
 bin_PROGRAMS=pgify
 lib_LTLIBRARIES=libpgify.la
+pgify_SOURCES=main.c
 
-pgify_SOURCES=pgify.c
-libpgify_la_SOURCES=pgify.1 pgify.h xmalloc.c system.h aclocal.m4 getopt.c getopt1.c getopt.h $(BUILT_SOURCES)
+libpgify_la_SOURCES=pgify.c pgify.1 xmalloc.c system.h aclocal.m4 getopt.c getopt1.c getopt.h $(BUILT_SOURCES)
+
+# these are installed
+include_HEADERS=pgify.h mysqlLexer.h mysqlParser.h
 
 mysqlParser.c: mysql.g
 	@java -jar antlr-3.2.jar -make -Xmultithreaded -Xconversiontimeout 10000 mysql.g

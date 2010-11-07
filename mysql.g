@@ -1578,7 +1578,7 @@ K_CURSOR : 'CURSOR'   ;
 K_CYCLE	 : 'CYCLE'   ;
 K_DATABASE : 'DATABASE'
 {
-	if(pgify_schema) {
+	if(PGIFY_IS_SCHEMA(LEXSTATE->userp)) {
 		SETTEXT(GETTEXT()->factory->newStr8(GETTEXT()->factory, (pANTLR3_UINT8) "SCHEMA"));
 	}
 }
@@ -2004,7 +2004,7 @@ QUOTED_STRING
 		//( 'n'|'N' )? QUOTE ( '\'\'' | '\\\'' | ~(QUOTE | '\\\'')* ) QUOTE
 	{
 		// stupid mysql escapes
-		if(pgify_escape) {
+		if(PGIFY_IS_ESCAPE(LEXSTATE->userp)) {
 			pANTLR3_STRING str = GETTEXT();
 			str->insert(str, 0, "E");
 			SETTEXT(str);
