@@ -35,16 +35,11 @@
 #define FALSE   0
 #endif
 
-struct pgify_options_struct {
-    int flags;
-};
-typedef struct pgify_options_struct *PgifyOptions;
-
 struct walker_state_struct {
     pmysqlParser psr;
     gchar *schemaName;
     GString *postbuf;
-    PgifyOptions options;
+    int *options;
 };
 typedef struct walker_state_struct *WalkerState;
 
@@ -60,8 +55,9 @@ typedef struct _pgify_tree_struct PgifyTree, *pPgifyTree;
 
 void pgifytree_free(pPgifyTree);
 
-pPgifyTree ANTLR3_CDECL pgify(PgifyOptions, pANTLR3_INPUT_STREAM);
-gchar* ANTLR3_CDECL pgify_string(PgifyOptions, pANTLR3_INPUT_STREAM);
+pPgifyTree ANTLR3_CDECL pgify(pANTLR3_INPUT_STREAM, int options);
+gchar* ANTLR3_CDECL pgify_string(pANTLR3_INPUT_STREAM, int options);
+gchar* ANTLR3_CDECL pgify_string_s(const char *, int options);
 
 
 /**
@@ -80,8 +76,8 @@ gchar* ANTLR3_CDECL pgify_string(PgifyOptions, pANTLR3_INPUT_STREAM);
  */
 #define PGIFY_ESCAPE 4
 
-#define PGIFY_IS_DEBUG(options)  ((PgifyOptions) options)->flags & PGIFY_DEBUG
-#define PGIFY_IS_SCHEMA(options) ((PgifyOptions) options)->flags & PGIFY_SCHEMA
-#define PGIFY_IS_ESCAPE(options) ((PgifyOptions) options)->flags & PGIFY_ESCAPE
+#define PGIFY_IS_DEBUG(options)  (*(int *) options) & PGIFY_DEBUG
+#define PGIFY_IS_SCHEMA(options) (*(int *) options) & PGIFY_SCHEMA
+#define PGIFY_IS_ESCAPE(options) (*(int *) options) & PGIFY_ESCAPE
 
 #endif

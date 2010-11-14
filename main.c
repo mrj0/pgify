@@ -52,7 +52,7 @@ static struct option const long_options[] = {
     {NULL, 0, NULL, 0}
 };
 
-static int decode_switches(int, char **, PgifyOptions);
+static int decode_switches(int, char **, int *options);
 
 static pANTLR3_UINT8 fName = NULL;
 
@@ -61,11 +61,8 @@ static gchar* read_stdin(void);
 int ANTLR3_CDECL main(int argc, char **argv) {
     program_name = argv[0];
 
-    struct pgify_options_struct _pgoptions;
-    PgifyOptions pgoptions = &_pgoptions;
-    pgoptions->flags = 0;
-
-    decode_switches(argc, argv, pgoptions);
+    int pgoptions = 0;
+    decode_switches(argc, argv, &pgoptions);
 
     pANTLR3_INPUT_STREAM input = antlr3AsciiFileStreamNew(fName);
     if(input == NULL) {
@@ -76,9 +73,8 @@ int ANTLR3_CDECL main(int argc, char **argv) {
 
         input = antlr3NewAsciiStringCopyStream((pANTLR3_UINT8) sql, len, NULL);
     }
-    input->setUcaseLA(input, ANTLR3_TRUE);
 
-    gchar *pg = pgify_string(pgoptions, input);
+    gchar *pg = pgify_string(input, pgoptions);
     if(pg) {
         printf("%s", pg);
         g_free(pg);
@@ -92,7 +88,7 @@ int ANTLR3_CDECL main(int argc, char **argv) {
 /* Set all the option flags according to the switches specified.
    Return the index of the first non-option argument.  */
 
-static int decode_switches(int argc, char **argv, PgifyOptions pgoptions) {
+static int decode_switches(int argc, char **argv, int *pgoptions) {
     int c;
 
     int debug = FALSE;
@@ -140,13 +136,13 @@ static int decode_switches(int argc, char **argv, PgifyOptions pgoptions) {
     }
 
     if(debug)
-        pgoptions->flags |= PGIFY_DEBUG;
+        *pgoptions |= PGIFY_DEBUG;
     if(schema)
-        pgoptions->flags |= PGIFY_SCHEMA;
+        (*pgoptions) |= PGIFY_SCHEMA;
     if(escape)
-        pgoptions->flags |= PGIFY_ESCAPE;
+        *pgoptions |= PGIFY_ESCAPE;
 
-    return optind;
+    return 0;
 }
 
 

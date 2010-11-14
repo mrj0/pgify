@@ -57,7 +57,10 @@ tokens {
 	T_CREATE_TABLE_ONUPDATE;
 	T_CREATE_TABLE_COLUMN_DEFAULT;
 	T_CREATE_TABLE_COLUMN_DEF;
+	T_SERVER_VARIABLE;
 	T_LOCK_TABLE;
+	
+	T_SELECT_STATEMENT;
 	
 	T_TRANSFORM; /* used when adding new statements during tree walk */
 }
@@ -488,25 +491,25 @@ select_statement
 	( into_file_clause )?
 	( for_update_clause | lock_in_share_mode )?
 	SEMI?
-	-> subquery_factoring_clause?
+	-> ^(T_SELECT_STATEMENT subquery_factoring_clause?
 	K_SELECT
 	K_DISTINCT? K_DISTINCTROW? K_UNION? K_ALL?
 	select_list
 //	into_file_clause?
 	( K_FROM table_reference_list )?
-	( where_clause )?
+	where_clause?
 //	( hierarchical_query_clause )?
-	( group_by_clause )?
+	group_by_clause?
 	( K_HAVING sql_condition )?
 //	( model_clause )?
-	( union_clause )?
-	( order_by_clause )?
-	( limit_clause )?
+	union_clause?
+	order_by_clause?
+	limit_clause?
 //	( procedure_clause )?
 //	( into_file_clause )?
-	( for_update_clause )?
+	for_update_clause?
 //	lock_in_share_mode?
-	SEMI?
+	SEMI ) /* tree */
 	;
 	
 /* ================================================================================
@@ -569,6 +572,11 @@ displayed_column
 		(alias|alias_name=sql_identifier)?
 //        -> ^('t_select_column' $asterisk1? $schema? DOT? $asterisk2? sql_expression? alias? $alias_name? )
     ;
+mysql_server_variable
+	: '@' '@' ( ID | BACKQUOTED_STRING )
+	-> ^(T_SERVER_VARIABLE ID? BACKQUOTED_STRING? )
+	;
+
 sql_expression
 	:	expr_add
 	;
@@ -605,6 +613,7 @@ expr_expr
 //	|	type_constructor_expression
 //	|	variable_expression
 //	:	K_NULL | NUMBER | QUOTED_STRING | IDENTIFIER
+	| mysql_server_variable
 	|	( subquery ) => subquery
 	;
 expr_paren
@@ -648,8 +657,9 @@ simple_expression
 	|	quoted_string
 	|	NUMBER
 	;        
+/*
 query_block
-	:	K_SELECT /*( hint )?*/ ( K_DISTINCT | K_DISTINCTROW | K_UNIQUE | K_ALL )? select_list
+	:	K_SELECT / *( hint )?* / ( K_DISTINCT | K_DISTINCTROW | K_UNIQUE | K_ALL )? select_list
 		K_FROM table_reference_list
 		( where_clause )?
 		( hierarchical_query_clause )?
@@ -657,6 +667,7 @@ query_block
 		( K_HAVING sql_condition )?
 		( model_clause )?
 	;
+*/
 
 subquery
 	:	LPAREN select_statement RPAREN
@@ -1503,6 +1514,8 @@ K_MEDIUMTEXT : 'MEDIUMTEXT' { SETTEXT(GETTEXT()->factory->newStr8(GETTEXT()->fac
 K_LONGTEXT : 'LONGTEXT' { SETTEXT(GETTEXT()->factory->newStr8(GETTEXT()->factory, (pANTLR3_UINT8) "TEXT")); } ;
 K_ENUM : 'ENUM' ;
 
+K_SHOW : 'SHOW' ;
+
 reserved_word options { backtrack=false; }
 	: r=( 'ACCESS'	| 'ADD'	| 'ALL'	| 'ALTER'	| 'AND'	| 'ANY'	| 'ARRAYLEN'	| 'AS'	| 'ASC'	| 'AUDIT'
 	| 'BETWEEN'	| 'BY'
@@ -1527,7 +1540,7 @@ reserved_word options { backtrack=false; }
 	| 'UID'	| 'UNION'	| 'UNIQUE'	| 'UPDATE'	| 'USER'	
 	| 'VALIDATE'	| 'VALUES'	| 'VARCHAR'	| 'VARCHAR2'	| 'VIEW'	
 	| 'WHENEVER'	| 'WHERE'	| 'WITH'
-	| 'TEXT' | 'MEDIUMTEXT'
+	| 'TEXT' | 'MEDIUMTEXT' | 'SHOW'
 	) //{ $r->setType($r, T_RESERVED); }
 	  //{ $type = T_RESERVED; }
 	// -> ^(T_RESERVED[$r])

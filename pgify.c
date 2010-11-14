@@ -45,7 +45,7 @@ static void print_postbuf(GString *output, WalkerState ws) {
 }
 
 
-pPgifyTree ANTLR3_CDECL pgify(PgifyOptions pgoptions, pANTLR3_INPUT_STREAM input) {
+pPgifyTree ANTLR3_CDECL pgify(pANTLR3_INPUT_STREAM input, int pgoptions) {
     pANTLR3_VECTOR                  tokens;
     pANTLR3_COMMON_TOKEN_STREAM     tstream;
     pmysqlLexer                     lxr;
@@ -61,7 +61,7 @@ pPgifyTree ANTLR3_CDECL pgify(PgifyOptions pgoptions, pANTLR3_INPUT_STREAM input
         ANTLR3_FPRINTF(stderr, "Unable to create the lexer due to malloc() failure\n");
         goto cleanup;
     }
-    lxr->pLexer->rec->state->userp = pgoptions;
+    lxr->pLexer->rec->state->userp = &pgoptions;
  
     tstream = antlr3CommonTokenStreamSourceNew(ANTLR3_SIZE_HINT, TOKENSOURCE(lxr));
     if (tstream == NULL) {
@@ -78,7 +78,7 @@ pPgifyTree ANTLR3_CDECL pgify(PgifyOptions pgoptions, pANTLR3_INPUT_STREAM input
         ANTLR3_FPRINTF(stderr, "Out of memory trying to allocate parser\n");
         goto cleanup;
     }
-    psr->pParser->rec->state->userp = pgoptions;
+    psr->pParser->rec->state->userp = &pgoptions;
  
     langAST = psr->start_rule(psr);
 
@@ -102,7 +102,7 @@ pPgifyTree ANTLR3_CDECL pgify(PgifyOptions pgoptions, pANTLR3_INPUT_STREAM input
     state->psr = psr;
     state->schemaName = g_strdup("");
     state->postbuf = postbuf;
-    state->options = pgoptions;
+    state->options = &pgoptions;
 
     if(langAST.tree != NULL)
         TreeWalkWorker(state, langAST.tree, 0);
@@ -148,10 +148,11 @@ cleanup:                        /* error */
 }
 
 
-gchar* ANTLR3_CDECL pgify_string(PgifyOptions pgoptions, pANTLR3_INPUT_STREAM input) {
+gchar* ANTLR3_CDECL pgify_string(pANTLR3_INPUT_STREAM input, int pgoptions) {
     int tokenIndex = 0;
     GString *output = g_string_new("");
-    pPgifyTree pt = pgify(pgoptions, input);
+    input->setUcaseLA(input, ANTLR3_TRUE);
+    pPgifyTree pt = pgify(input, pgoptions);
     if(!pt)
         return NULL;
 
@@ -162,6 +163,17 @@ gchar* ANTLR3_CDECL pgify_string(PgifyOptions pgoptions, pANTLR3_INPUT_STREAM in
 
     pgifytree_free(pt);
     return g_string_free(output, FALSE);
+}
+
+
+gchar* ANTLR3_CDECL pgify_string_s(const char *sql, int pgoptions) {
+    pANTLR3_INPUT_STREAM input = antlr3NewAsciiStringCopyStream((pANTLR3_UINT8) sql, strlen(sql), NULL);
+
+    gchar *ret = pgify_string(input, pgoptions);
+
+    input->close(input);
+    input = NULL;
+    return ret;
 }
 
 
@@ -684,30 +696,33 @@ static void delete_tree_children(pANTLR3_BASE_TREE tree) {
 
 
 static void lock_tables_worker(WalkerState ws, pANTLR3_BASE_TREE basetree, pANTLR3_BASE_TREE tree) {
-    /* int pos = look_ahead_index(tree, 0, K_WRITE); */
-    /* if(pos > -1) { */
-    /*     pANTLR3_BASE_TREE child = tree->getChild(tree, pos); */
-    /*     pANTLR3_COMMON_TOKEN token = child->getToken(child); */
-    /*     pANTLR3_STRING str = token->getText(token); */
-    /*     str->set(str, "IN EXCLUSIVE MODE"); */
-    /*     token->setText(token, str); */
-    /* } */
-
-    /* // remove K_LOCAL for now */
-    /* pos = look_ahead_index(tree, 0, K_LOCAL); */
-    /* if(pos > -1) */
-    /*     tree->deleteChild(tree, pos); */
-
-    /* // remove K_LOW_PRIORITY for now */
-    /* pos = look_ahead_index(tree, 0, K_LOW_PRIORITY); */
-    /* if(pos > -1) */
-    /*     tree->deleteChild(tree, pos); */
-
     pANTLR3_STRING str = tree->getText(tree);
     str->set(str, "");
     pANTLR3_COMMON_TOKEN token = tree->getToken(tree);
     token->setText(token, str);
     delete_tree_children(tree);
+}
+
+
+static void rewrite_server_variables(WalkerState ws, pANTLR3_BASE_TREE basetree, pANTLR3_BASE_TREE tree) {
+    static const char *VERSION_SQL =
+        " ( select character_value from information_schema.sql_implementation_info where implementation_info_name = 'DBMS VERSION') ";
+
+    int pos = look_ahead_down(tree, pos, ID);
+    if(pos < 0)
+        return;
+
+    pANTLR3_BASE_TREE child = tree->getChild(tree, pos);
+    pANTLR3_STRING str = child->getText(child);
+    gchar *ustr = unquote(str->chars);
+
+    gint cmp = g_ascii_strcasecmp("version", ustr);
+    gint cmp2 = g_ascii_strcasecmp("version_comment", ustr);
+
+    if(cmp == 0 || cmp2 == 0)
+        str->set(str, VERSION_SQL);
+
+    g_free(ustr);
 }
 
 
@@ -778,6 +793,8 @@ static void TreeWalkWorker(WalkerState ws, pANTLR3_BASE_TREE p, int level) {
             use_database_worker(ws, p, child);
         else if(tokenType == T_LOCK_TABLE)
             lock_tables_worker(ws, p, child);
+        else if(tokenType == T_SERVER_VARIABLE)
+            rewrite_server_variables(ws, p, child);
     }
 }
 
