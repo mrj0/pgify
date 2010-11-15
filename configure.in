@@ -45,4 +45,4 @@ dnl Checks for typedefs, structures, and compiler characteristics.
 
 dnl Checks for library functions.
 
-AC_OUTPUT(Makefile pgify.lsm pgify.spec)
+AC_OUTPUT(Makefile pgify.lsm pgify.spec pgify.pc)

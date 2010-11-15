@@ -22,6 +22,10 @@
 #ifndef _pgify_h
 #define _pgify_h
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <glib.h>
 #include <antlr3.h>
 #include "mysqlLexer.h"
@@ -55,9 +59,10 @@ typedef struct _pgify_tree_struct PgifyTree, *pPgifyTree;
 
 void pgifytree_free(pPgifyTree);
 
-pPgifyTree ANTLR3_CDECL pgify(pANTLR3_INPUT_STREAM, int options);
-gchar* ANTLR3_CDECL pgify_string(pANTLR3_INPUT_STREAM, int options);
-gchar* ANTLR3_CDECL pgify_string_s(const char *, int options);
+pPgifyTree pgify(pANTLR3_INPUT_STREAM, int options);
+gchar* pgify_string(pANTLR3_INPUT_STREAM, int options);
+gchar* pgify_string_s(const char *, int options);
+gchar* pgify_string_tree(pPgifyTree);
 
 
 /**
@@ -80,4 +85,7 @@ gchar* ANTLR3_CDECL pgify_string_s(const char *, int options);
 #define PGIFY_IS_SCHEMA(options) (*(int *) options) & PGIFY_SCHEMA
 #define PGIFY_IS_ESCAPE(options) (*(int *) options) & PGIFY_ESCAPE
 
+#ifdef __cplusplus
+}
 #endif
+#endif  /* sentinel */

@@ -5,6 +5,8 @@ lib_LTLIBRARIES=libpgify.la
 pgify_SOURCES=main.c
 
 libpgify_la_SOURCES=pgify.c pgify.1 xmalloc.c system.h aclocal.m4 getopt.c getopt1.c getopt.h $(BUILT_SOURCES)
+libpgify_ladir=$(libdir)/pkgconfig
+libpgify_la_DATA=pgify.pc
 
 # these are installed
 include_HEADERS=pgify.h mysqlLexer.h mysqlParser.h

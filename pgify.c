@@ -45,7 +45,7 @@ static void print_postbuf(GString *output, WalkerState ws) {
 }
 
 
-pPgifyTree ANTLR3_CDECL pgify(pANTLR3_INPUT_STREAM input, int pgoptions) {
+pPgifyTree pgify(pANTLR3_INPUT_STREAM input, int pgoptions) {
     pANTLR3_VECTOR                  tokens;
     pANTLR3_COMMON_TOKEN_STREAM     tstream;
     pmysqlLexer                     lxr;
@@ -148,7 +148,7 @@ cleanup:                        /* error */
 }
 
 
-gchar* ANTLR3_CDECL pgify_string(pANTLR3_INPUT_STREAM input, int pgoptions) {
+gchar* pgify_string(pANTLR3_INPUT_STREAM input, int pgoptions) {
     int tokenIndex = 0;
     GString *output = g_string_new("");
     input->setUcaseLA(input, ANTLR3_TRUE);
@@ -166,7 +166,7 @@ gchar* ANTLR3_CDECL pgify_string(pANTLR3_INPUT_STREAM input, int pgoptions) {
 }
 
 
-gchar* ANTLR3_CDECL pgify_string_s(const char *sql, int pgoptions) {
+gchar* pgify_string_s(const char *sql, int pgoptions) {
     pANTLR3_INPUT_STREAM input = antlr3NewAsciiStringCopyStream((pANTLR3_UINT8) sql, strlen(sql), NULL);
 
     gchar *ret = pgify_string(input, pgoptions);
@@ -865,13 +865,13 @@ static void TreeWalkPrinter(GString *output, pANTLR3_BASE_TREE p, pANTLR3_VECTOR
     }
 }
 
-/* static void TreeWalk(WalkerState ws, pANTLR3_BASE_TREE p, pANTLR3_VECTOR tokens) { */
-/*     int tokenIndex = 0; */
+gchar* pgify_string_tree(pPgifyTree pt) {
+    int tokenIndex = 0;
+    GString *output = g_string_new("");
 
-/*     TreeWalkWorker(ws, p, 0); */
-/*     TreeWalkPrinter(p, tokens, &tokenIndex); */
-/*     advance_all(tokens, &tokenIndex); */
+    TreeWalkPrinter(output, pt->langAST.tree, pt->tokens, &tokenIndex);
+    advance_all(output, pt->tokens, &tokenIndex);
+    print_postbuf(output, pt->ws);
 
-/*     print_postbuf(ws->postbuf); */
-/* }; */
-
+    return g_string_free(output, FALSE);
+}
