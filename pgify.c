@@ -836,6 +836,9 @@ static void advance_all(GString *output, pANTLR3_VECTOR tokens, int *tokenIndex)
 static void TreeWalkPrinter(GString *output, pANTLR3_BASE_TREE p, pANTLR3_VECTOR tokens, int *tokenIndex) {
     ANTLR3_UINT32 n, c, max = 0;
 
+    if(!p)
+        return;
+
     n = p->getChildCount(p);
 
     // first, walk tree at the current level and get the max first token size
