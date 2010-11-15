@@ -48,6 +48,7 @@ options {
 
 tokens {
 	T_USE_DATABASE;
+	T_SHOW_DATABASES;
 	T_CREATE_TABLE;
 	T_CREATE_TABLE_INDEX;
 	T_CREATE_TABLE_OPTIONS;
@@ -84,6 +85,7 @@ start_rule
         |   create_table_statement
         |   create_database_statement
         |   use_database_statement
+        |	show_databases_statement
         |	lock_tables_statement
         |	unlock_tables_statement
         |	SEMI
@@ -134,6 +136,15 @@ use_database_statement
 	-> T_TRANSFORM[""] ^( T_USE_DATABASE K_USE identifier SEMI? )
 	;
 	
+/* ================================================================================
+   SHOW DATABASES statement
+   ================================================================================ */
+show_databases_statement
+	: K_SHOW 'DATABASES'
+	SEMI?
+	-> T_TRANSFORM["SELECT nspname AS UserName FROM pg_namespace ORDER BY nspname"] SEMI?
+	;
+   
 /* ================================================================================
    CREATE DATABASE statement
    ================================================================================ */
