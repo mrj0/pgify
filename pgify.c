@@ -719,8 +719,11 @@ static void rewrite_server_variables(WalkerState ws, pANTLR3_BASE_TREE basetree,
     gint cmp = g_ascii_strcasecmp("version", ustr);
     gint cmp2 = g_ascii_strcasecmp("version_comment", ustr);
 
-    if(cmp == 0 || cmp2 == 0)
+    if(cmp == 0 || cmp2 == 0) {
         str->set(str, VERSION_SQL);
+        pANTLR3_COMMON_TOKEN token = child->getToken(child);
+        token->setText(token, str);
+    }
 
     g_free(ustr);
 }
