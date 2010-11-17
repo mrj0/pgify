@@ -47,7 +47,6 @@ static struct option const long_options[] = {
     {"help", no_argument, 0, 'h'},
     {"version", no_argument, 0, 'V'},
     {"debug", no_argument, 0, 'd'},
-    {"schema", no_argument, 0, 's'},
     {"escape", no_argument, 0, 'e'},
     {NULL, 0, NULL, 0}
 };
@@ -92,7 +91,6 @@ static int decode_switches(int argc, char **argv, int *pgoptions) {
     int c;
 
     int debug = FALSE;
-    int schema = TRUE;
     int escape = TRUE;
 
     while((c = getopt_long(
@@ -101,7 +99,6 @@ static int decode_switches(int argc, char **argv, int *pgoptions) {
                "f:"             /* file */
                "h"              /* help */
                "d"              /* debug */
-               "s"              /* schema */
                "e"              /* escape */
                "V",             /* version */
                long_options,
@@ -122,10 +119,6 @@ static int decode_switches(int argc, char **argv, int *pgoptions) {
             debug = TRUE;
             break;
 
-        case 's':
-            schema = FALSE;
-            break;
-
         case 'e':
             escape = FALSE;
             break;
@@ -137,8 +130,6 @@ static int decode_switches(int argc, char **argv, int *pgoptions) {
 
     if(debug)
         *pgoptions |= PGIFY_DEBUG;
-    if(schema)
-        (*pgoptions) |= PGIFY_SCHEMA;
     if(escape)
         *pgoptions |= PGIFY_ESCAPE;
 
@@ -156,7 +147,6 @@ Options:\n\
   -h, --help                 display this help and exit\n\
   -V, --version              output version information and exit\n\
   -d, --debug                print debug statement structure to stderr\n\
-  -s, --schema               convert database to schema (default true)\n\
   -e, --escape               convert backslash escapes to ANSI standards(default true)\n\
 "));
     exit(status);

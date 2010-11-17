@@ -663,9 +663,6 @@ static void create_table_worker(WalkerState ws, pANTLR3_BASE_TREE basetree, pANT
 
 
 static void use_database_worker(WalkerState ws, pANTLR3_BASE_TREE basetree, pANTLR3_BASE_TREE tree) {
-    if(!PGIFY_IS_SCHEMA(ws->options))
-        return;
-
     int pos = look_ahead_index(tree, 0, K_USE);
     if(pos < 0)
         return;

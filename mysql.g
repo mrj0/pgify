@@ -142,7 +142,15 @@ use_database_statement
 show_databases_statement
 	: K_SHOW 'DATABASES'
 	SEMI?
-	-> T_TRANSFORM["SELECT nspname AS UserName FROM pg_namespace ORDER BY nspname"] SEMI?
+	-> T_TRANSFORM["SELECT nspname AS database FROM pg_namespace ORDER BY nspname"] SEMI?
+	;
+	
+/* ================================================================================
+   SHOW TABLES statement
+   ================================================================================ */
+show_tables_statement
+	: K_SHOW 'TABLES'
+	SEMI?
 	;
    
 /* ================================================================================
@@ -152,7 +160,7 @@ create_database_statement
 	: K_CREATE K_DATABASE identifier
 	create_database_options*
 	SEMI?
-	-> T_TRANSFORM[""] K_CREATE K_DATABASE identifier SEMI?
+	-> K_CREATE K_DATABASE["SCHEMA"] identifier SEMI?
 	/* todo charset options */
 	;
 	
@@ -369,7 +377,7 @@ drop_statement
 	table_list
     ( K_RESTRICT | K_CASCADE )?
     SEMI?
-    -> K_DROP K_TEMPORARY? K_TABLE? K_DATABASE?
+    -> K_DROP K_TEMPORARY? K_TABLE? K_DATABASE["SCHEMA"]?
     K_IF? K_EXISTS?
     table_list
     SEMI?
@@ -1600,13 +1608,13 @@ K_COLUMN_FORMAT : 'COLUMN_FORMAT'	;
 K_COUNT : 'COUNT'   ;
 K_CURSOR : 'CURSOR'   ;
 K_CYCLE	 : 'CYCLE'   ;
-K_DATABASE : 'DATABASE'
-{
+K_DATABASE : 'DATABASE';
+/*{
 	if(PGIFY_IS_SCHEMA(LEXSTATE->userp)) {
 		SETTEXT(GETTEXT()->factory->newStr8(GETTEXT()->factory, (pANTLR3_UINT8) "SCHEMA"));
 	}
 }
- ;
+ ;*/
 K_DATAFILE : 'DATAFILE'   ;
 K_DAY : 'DAY'   ;
 K_DBA : 'DBA'   ;

@@ -7,7 +7,7 @@ SHOW DATABASES;
 EOF
 
 cat > "$expected" <<EOF
-SELECT nspname AS UserName FROM pg_namespace ORDER BY nspname;
+SELECT nspname AS database FROM pg_namespace ORDER BY nspname;
 EOF
 
 pgify

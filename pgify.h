@@ -71,18 +71,12 @@ gchar* pgify_string_tree(pPgifyTree);
  */
 #define PGIFY_DEBUG 1
 /**
- * Enable translation of DATABASE to SCHEMA
- *
- */
-#define PGIFY_SCHEMA 2
-/**
  * Prefix all quoted strings with E, postgres' way of handling mysql string escapes.
  *
  */
-#define PGIFY_ESCAPE 4
+#define PGIFY_ESCAPE 2
 
 #define PGIFY_IS_DEBUG(options)  (*(int *) options) & PGIFY_DEBUG
-#define PGIFY_IS_SCHEMA(options) (*(int *) options) & PGIFY_SCHEMA
 #define PGIFY_IS_ESCAPE(options) (*(int *) options) & PGIFY_ESCAPE
 
 #ifdef __cplusplus

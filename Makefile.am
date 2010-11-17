@@ -44,7 +44,8 @@ TESTS=test/testSimple.sh \
 	test/teststupiddate.sh \
 	test/testreserved.sh \
 	test/testvariable.sh \
-	test/testshowdatabases.sh
+	test/testshowdatabases.sh \
+	test/testfunction.sh
 
 #  build and install the .info pages
 info_TEXINFOS = pgify.texinfo
