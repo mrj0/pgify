@@ -62,6 +62,12 @@ tokens {
 	T_LOCK_TABLE;
 	
 	T_SELECT_STATEMENT;
+	T_SHOW_TABLES_LIKE;
+	T_SHOW_TABLES_FROM;
+	
+	T_SHOW_TABLES;
+	
+	T_WHERE;
 	
 	T_TRANSFORM; /* used when adding new statements during tree walk */
 }
@@ -86,6 +92,7 @@ start_rule
         |   create_database_statement
         |   use_database_statement
         |	show_databases_statement
+        |	show_tables_statement
         |	lock_tables_statement
         |	unlock_tables_statement
         |	SEMI
@@ -149,10 +156,32 @@ show_databases_statement
    SHOW TABLES statement
    ================================================================================ */
 show_tables_statement
-	: K_SHOW 'TABLES'
+	: K_SHOW K_FULL? 'TABLES'
+	show_tables_from?
+	( show_tables_like | show_tables_where )?
 	SEMI?
+	-> ^(T_SHOW_TABLES
+	K_SHOW K_FULL? 'TABLES'
+	show_tables_from?
+	show_tables_like?
+	show_tables_where?
+	SEMI? )
 	;
-   
+
+show_tables_from
+	: ( K_FROM | K_IN ) identifier
+	-> ^(T_SHOW_TABLES_FROM identifier)
+	;
+	
+show_tables_like
+	: K_LIKE quoted_string
+	-> ^(T_SHOW_TABLES_LIKE K_LIKE quoted_string)
+	;
+	
+show_tables_where
+	: where_clause
+	;
+	
 /* ================================================================================
    CREATE DATABASE statement
    ================================================================================ */
@@ -964,7 +993,7 @@ collection_expression
    ================================================================================ */
 where_clause
 	:	K_WHERE sql_condition
-//        -> ^( 't_where' K_WHERE sql_condition)
+        -> ^( T_WHERE K_WHERE sql_condition)
 	;
 /* ================================================================================
    hierarchical query clause

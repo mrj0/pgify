@@ -263,6 +263,19 @@ static gchar* unquote(const gchar *string) {
 }
 
 
+/**
+ * lower-case tree text
+ *
+ * result must be released with g_free()
+ *
+ */
+static gchar* get_lower_text(pANTLR3_BASE_TREE tree) {
+    pANTLR3_STRING str = tree->getText(tree);
+    str = str->toUTF8(str);
+    return g_utf8_strdown(str->chars, -1);
+}
+
+
 static void create_table_remove_table_options(pANTLR3_BASE_TREE base) {
     int pos = 0;
 
@@ -649,6 +662,87 @@ static void create_table_rewrite_onupdate(WalkerState ws, pANTLR3_BASE_TREE base
 }
 
 
+static void show_tables_rewrite(WalkerState ws, pANTLR3_BASE_TREE base) {
+    static const char *show_tables =
+        "SELECT %s\n"                                     /* columns */
+        "  FROM ( SELECT table_name AS tables,\n"
+        "                'BASE TABLE' AS table_type\n"
+        "           FROM information_schema.tables\n"
+        "          WHERE table_schema = %s\n"             /* schema */
+        "          UNION SELECT table_name,\n"
+        "                'VIEW'\n"
+        "           FROM information_schema.views\n"
+        "          WHERE table_schema = %s\n"
+        "          ORDER BY 1 ) sub\n"                    /* schema */
+        "%s\n";                                           /* where or like */
+
+    int from, like, full, show;
+    pANTLR3_BASE_TREE showChild;
+    pANTLR3_COMMON_TOKEN token;
+    pANTLR3_STRING tokentext;
+    GString *columns, *where, *schema, *statement;
+    gchar *gcolumns, *gwhere, *gschema, *gstatement;
+    columns = g_string_new("sub.tables");
+    where = g_string_new("");
+    schema = g_string_new("current_schema()");
+
+    from = look_ahead_index(base, 0, T_SHOW_TABLES_FROM);
+    if(from > -1) {
+        pANTLR3_BASE_TREE fromchild, child;
+        gchar *low, *unquoted;
+
+        fromchild = base->getChild(base, from);
+        child = fromchild->getChild(fromchild, 0);
+        low = get_lower_text(child);
+        unquoted = unquote(low);
+
+        g_string_truncate(schema, 0);
+        g_string_append_printf(schema, "\"%s\"", unquoted);
+
+        base->deleteChild(base, from);
+        g_free(low);
+        g_free(unquoted);
+    }
+
+    like = look_ahead_index(base, 0, T_SHOW_TABLES_LIKE);
+    if(like > -1) {
+        g_string_append(where, "WHERE sub.tables ");
+    }
+
+    full = look_ahead_index(base, 0, K_FULL);
+    if(full > -1) {
+        base->deleteChild(base, full);
+        g_string_truncate(columns, 0);
+        g_string_append_printf(columns, "sub.tables, sub.table_type");
+    }
+
+    gcolumns = g_string_free(columns, FALSE);
+    gwhere = g_string_free(where, FALSE);
+    gschema = g_string_free(schema, FALSE);
+
+    statement = g_string_new(NULL);
+    g_string_append_printf(statement, show_tables, gcolumns, gschema, gschema, gwhere);
+    gstatement = g_string_free(statement, FALSE);
+
+    // delete show tables
+    //base->deleteChild(base, look_ahead_index(base, 0, K_SHOW));
+    base->deleteChild(base, look_ahead_index(base, 0, K_TABLES));
+
+    // text doesn't display for imaginary tokens, i guess
+    show = look_ahead_index(base, 0, K_SHOW);
+    showChild = base->getChild(base, show);
+    token = showChild->getToken(showChild);
+    tokentext = token->getText(token);
+    tokentext->set(tokentext, gstatement);
+    token->setText(token, tokentext);
+    
+    g_free(gstatement);
+    g_free(gcolumns);
+    g_free(gwhere);
+    g_free(gschema);
+}
+
+
 static void create_table_worker(WalkerState ws, pANTLR3_BASE_TREE basetree, pANTLR3_BASE_TREE tree) {
     create_rewrite_enum(ws, tree);
     create_rewrite_datatypes(ws, tree);
@@ -795,6 +889,8 @@ static void TreeWalkWorker(WalkerState ws, pANTLR3_BASE_TREE p, int level) {
             lock_tables_worker(ws, p, child);
         else if(tokenType == T_SERVER_VARIABLE)
             rewrite_server_variables(ws, p, child);
+        else if(tokenType == T_SHOW_TABLES)
+            show_tables_rewrite(ws, child);
     }
 }
 
