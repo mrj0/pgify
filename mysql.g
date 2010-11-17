@@ -67,6 +67,8 @@ tokens {
 	
 	T_SHOW_TABLES;
 	
+	T_FUNCTION_NAME;
+	
 	T_WHERE;
 	
 	T_TRANSFORM; /* used when adding new statements during tree walk */
@@ -557,7 +559,7 @@ select_statement
 //	( into_file_clause )?
 	for_update_clause?
 //	lock_in_share_mode?
-	SEMI ) /* tree */
+	SEMI? ) /* tree */
 	;
 	
 /* ================================================================================
@@ -671,7 +673,8 @@ nested_expression
 	:	sql_expression
 	;
 function_expression
- 	:	(function_name|analytic_function_name) LPAREN call_parameters? RPAREN
+ 	:	(database_function_name|function_name|analytic_function_name) LPAREN call_parameters? RPAREN
+ 	->	^(T_FUNCTION_NAME function_name? analytic_function_name? database_function_name? LPAREN call_parameters? RPAREN )
 	;
 
 call_parameters
@@ -832,8 +835,9 @@ boolean_literal
 	;
 
 t_alias
-	: alias_name=sql_identifier //{ $alias_name->setType($alias_name, T_ALIAS); }
-//        { $type = T_ALIAS; }
+	: //sql_identifier
+	/* have to be more restrictive because this is matching 'limit' */
+	ID | BACKQUOTED_STRING | QUOTED_STRING
 	;
 
 c_alias
@@ -877,6 +881,11 @@ function_name
 	: sql_identifier DOT sql_identifier DOT sql_identifier
 	| sql_identifier DOT sql_identifier
 	| sql_identifier
+	;
+
+database_function_name
+	: K_DATABASE
+	-> K_DATABASE["current_schema"]
 	;
 
 identifier
