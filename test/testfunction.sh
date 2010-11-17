@@ -3,11 +3,11 @@
 . test/testcommon.sh
 
 cat > "$input" <<EOF
-SHOW DATABASES;
+select database();
 EOF
 
 cat > "$expected" <<EOF
-select schema_name as database from information_schema.schemata order by 1 ;
+select database();
 EOF
 
 pgify

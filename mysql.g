@@ -142,7 +142,7 @@ use_database_statement
 show_databases_statement
 	: K_SHOW 'DATABASES'
 	SEMI?
-	-> T_TRANSFORM["SELECT nspname AS database FROM pg_namespace ORDER BY nspname"] SEMI?
+	-> T_TRANSFORM["select schema_name as database from information_schema.schemata order by 1"] SEMI?
 	;
 	
 /* ================================================================================
@@ -642,7 +642,7 @@ nested_expression
 	:	sql_expression
 	;
 function_expression
- 	:	(function_name|analytic_function_name) LPAREN call_parameters RPAREN
+ 	:	(function_name|analytic_function_name) LPAREN call_parameters? RPAREN
 	;
 
 call_parameters
