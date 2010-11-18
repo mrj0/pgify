@@ -672,7 +672,28 @@ expr_paren
 nested_expression
 	:	sql_expression
 	;
+	
 function_expression
+	: function_expression_concat_ws
+	| function_expression_concat
+	| function_expression_normal
+	;
+
+function_expression_concat
+	: K_CONCAT LPAREN call_parameters RPAREN
+	-> LPAREN[" ARRAY_TO_STRING(ARRAY["] call_parameters RPAREN["], '')"]
+	;
+	
+function_expression_concat_ws
+	: K_CONCAT_WS LPAREN sql_identifier COMMA function_expression_concat_ws_parameters RPAREN
+	-> LPAREN[" ARRAY_TO_STRING(ARRAY["] function_expression_concat_ws_parameters T_TRANSFORM["], "] sql_identifier RPAREN
+	;
+	
+function_expression_concat_ws_parameters
+	: sql_identifier ( COMMA sql_identifier )*
+	;
+	
+function_expression_normal
  	:	(database_function_name|function_name|analytic_function_name) LPAREN call_parameters? RPAREN
  	->	^(T_FUNCTION_NAME function_name? analytic_function_name? database_function_name? LPAREN call_parameters? RPAREN )
 	;
@@ -896,6 +917,7 @@ identifier
 
 sql_identifier
 	:	identifier
+	|   QUOTED_STRING
     |	keyword
 	|	K_ROWID
 	|	K_ROWNUM
@@ -1970,6 +1992,9 @@ K_CURRENT_TIMESTAMP : 'CURRENT_TIMESTAMP' { SETTEXT(GETTEXT()->factory->newStr8(
 STUPID_MYSQL_DATE : '\'0000-00-00\''  { SETTEXT(GETTEXT()->factory->newStr8(GETTEXT()->factory, (pANTLR3_UINT8) "NULL")); };
 STUPID_MYSQL_TIMESTAMP : '\'0000-00-00 00:00:00\''  { SETTEXT(GETTEXT()->factory->newStr8(GETTEXT()->factory, (pANTLR3_UINT8) "NULL")); };
 
+K_CONCAT: 'CONCAT' ;
+K_CONCAT_WS: 'CONCAT_WS' ;
+
 keyword
 	: 'A' // note: this one is not listed in the docs but is a part of "IS A SET" condition clause
 	| 'ADMIN'	| 'AFTER'	| 'ALLOCATE'	| 'ANALYZE'	| 'ARCHIVE'	| 'ARCHIVELOG'	| 'AT'	| 'AUTHORIZATION'	| 'AUTO_INCREMENT'	| 'AVG'	
@@ -2063,6 +2088,8 @@ keyword
     | 'CURRENT_TIMESTAMP'
     | 'INNODB'
     | 'MYISAM'
+    | 'CONCAT'
+    | 'CONCAT_WS'
 	;
 
 quoted_string
@@ -2260,6 +2287,9 @@ WS	:	(' '|'\r'|'\t'|'\n') {$channel=HIDDEN;}
 	;
 SL_COMMENT
 	:	'--' ~('\n'|'\r')* '\r'? '\n' {$channel=HIDDEN;}
+	;
+MYSQL_COMMENT
+	:	'#' ~('\n'|'\r')* '\r'? '\n' {$channel=HIDDEN;}
 	;
 ML_COMMENT
 	:	'/*' ( options {greedy=false;} : . )* '*/' {$channel=HIDDEN;}
