@@ -926,7 +926,7 @@ function_name
 
 database_function_name
 	: K_DATABASE
-	-> K_DATABASE["current_schema"]
+	-> K_DATABASE[" current_schema "]
 	;
 
 identifier
