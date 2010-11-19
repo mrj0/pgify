@@ -686,7 +686,7 @@ static void show_tables_rewrite(WalkerState ws, pANTLR3_BASE_TREE base) {
     where = g_string_new("");
     schema = g_string_new("current_schema()");
 
-    from = look_ahead_index(base, 0, T_SHOW_TABLES_FROM);
+    from = look_ahead_index(base, 0, T_SHOW_FROM);
     if(from > -1) {
         pANTLR3_BASE_TREE fromchild, child;
         gchar *low, *unquoted;
@@ -704,7 +704,7 @@ static void show_tables_rewrite(WalkerState ws, pANTLR3_BASE_TREE base) {
         g_free(unquoted);
     }
 
-    like = look_ahead_index(base, 0, T_SHOW_TABLES_LIKE);
+    like = look_ahead_index(base, 0, T_SHOW_LIKE);
     if(like > -1) {
         g_string_append(where, "WHERE sub.tables ");
     }
@@ -716,9 +716,9 @@ static void show_tables_rewrite(WalkerState ws, pANTLR3_BASE_TREE base) {
         g_string_append_printf(columns, "sub.tables, sub.table_type");
     }
 
-    gcolumns = g_string_free(columns, FALSE);
     gwhere = g_string_free(where, FALSE);
     gschema = g_string_free(schema, FALSE);
+    gcolumns = g_string_free(columns, FALSE);
 
     statement = g_string_new(NULL);
     g_string_append_printf(statement, show_tables, gcolumns, gschema, gschema, gwhere);
@@ -737,9 +737,127 @@ static void show_tables_rewrite(WalkerState ws, pANTLR3_BASE_TREE base) {
     token->setText(token, tokentext);
     
     g_free(gstatement);
-    g_free(gcolumns);
     g_free(gwhere);
     g_free(gschema);
+    g_free(gcolumns);
+}
+
+
+static show_columns_rewrite(WalkerState ws, pANTLR3_BASE_TREE base) {
+    static const char *show_columns =
+        "SELECT %s FROM (\n"                                                 /* columns */
+        "SELECT c.column_name AS field,\n"
+        "       udt_name || COALESCE ( '(' || character_maximum_length || ')', '' ) AS TYPE,\n"
+        "       current_setting ( 'LC_COLLATE' ) AS collation,\n"
+        "       is_nullable AS NULL,\n"
+        "       ( SELECT CASE WHEN count ( * ) > 0 THEN 'PRI'\n"
+        "		     ELSE ''\n"
+        "		END\n"
+        "           FROM information_schema.key_column_usage u\n"
+        "          WHERE c.table_catalog = u.table_catalog\n"
+        "            AND c.table_schema = u.table_schema\n"
+        "            AND c.column_name = u.column_name ) AS KEY,\n"
+        "       column_default AS DEFAULT,\n"
+        "       '' AS extra,\n"
+        "       ( SELECT array_to_string ( array_agg ( cp.privilege_type::text ), ',' )\n"
+        "           FROM information_schema.column_privileges cp\n"
+        "          WHERE c.table_catalog = cp.table_catalog\n"
+        "            AND c.table_schema = cp.table_schema\n"
+        "            AND c.column_name = cp.column_name ) AS priv,\n"
+        "       '' AS comment\n"
+        "  FROM information_schema.COLUMNS c\n"
+        " WHERE c.table_catalog = current_database ( )\n"
+        "   AND c.table_name = '%s'\n"                                        /* table */
+        "   AND c.table_schema = '%s'\n"                                      /* schema */
+        " ORDER BY c.ordinal_position ) SUB\n"
+        "%s\n";                                                               /* where or like */
+
+    GString *table, *schema, *statement;
+    gchar *gtable, *gschema, *gstatement;
+    int full, from_table, from_schema, like, show;
+
+    schema = g_string_new("");
+    table = g_string_new("");
+
+    static const char *full_columns = "*";
+    static const char *normal_columns = "field, type, null, key, default, extra";
+
+    const char *columns = normal_columns;
+    char *where = "";
+
+    full = look_ahead_index(base, 0, K_FULL);
+    if(full > -1) {
+        base->deleteChild(base, full);
+        columns = full_columns;
+    }
+
+    from_table = look_ahead_index(base, 0, T_SHOW_FROM);
+    if(from_table > -1) {
+        pANTLR3_BASE_TREE fromchild, child;
+        pANTLR3_COMMON_TOKEN token;
+        pANTLR3_STRING tokentext;
+        gchar *low, *unquoted;
+        
+        fromchild = base->getChild(base, from_table);
+        child = fromchild->getChild(fromchild, 0); /* must be first */
+        low = get_lower_text(child);
+        unquoted = unquote(low);
+        
+        g_string_append(table, unquoted);
+
+        base->deleteChild(base, from_table);
+        g_free(low);
+        g_free(unquoted);
+    }
+
+    from_schema = look_ahead_index(base, 0, T_SHOW_FROM);
+    if(from_schema > -1) {
+        pANTLR3_BASE_TREE fromchild, child;
+        pANTLR3_COMMON_TOKEN token;
+        pANTLR3_STRING tokentext;
+        gchar *low, *unquoted;
+        
+        fromchild = base->getChild(base, from_schema);
+        child = fromchild->getChild(fromchild, 0); /* must be first */
+        low = get_lower_text(child);
+        unquoted = unquote(low);
+        
+        g_string_append(schema, unquoted);
+
+        base->deleteChild(base, from_schema);
+        g_free(low);
+        g_free(unquoted);
+    }
+    else
+        g_string_append(schema, "current_schema()");
+
+    like = look_ahead_index(base, 0, T_SHOW_LIKE);
+    if(like > -1) {
+        where = "WHERE sub.field ";
+    }
+
+    gtable = g_string_free(table, FALSE);
+    gschema = g_string_free(schema, FALSE);
+
+    statement = g_string_new(NULL);
+    g_string_append_printf(statement, show_columns, columns, gtable, gschema, where);
+    gstatement = g_string_free(statement, FALSE);
+
+    show = look_ahead_index(base, 0, K_SHOW);
+    if(show > -1) {
+        pANTLR3_BASE_TREE showchild;
+        pANTLR3_COMMON_TOKEN token;
+        pANTLR3_STRING str;
+        showchild = base->getChild(base, show);
+        token = showchild->getToken(showchild);
+        str = token->getText(token);
+        str->set(str, gstatement);
+        token->setText(token, str);
+    }
+
+    g_free(gtable);
+    g_free(gschema);
+    g_free(gstatement);
 }
 
 
@@ -891,6 +1009,8 @@ static void TreeWalkWorker(WalkerState ws, pANTLR3_BASE_TREE p, int level) {
             rewrite_server_variables(ws, p, child);
         else if(tokenType == T_SHOW_TABLES)
             show_tables_rewrite(ws, child);
+        else if(tokenType == T_SHOW_COLUMNS)
+            show_columns_rewrite(ws, child);
     }
 }
 

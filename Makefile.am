@@ -47,7 +47,8 @@ TESTS=test/testSimple.sh \
 	test/testshowdatabases.sh \
 	test/testfunction.sh \
 	test/testshowtables.sh \
-	test/testconcatws.sh
+	test/testconcatws.sh \
+	test/testshowcolumns.sh
 
 #  build and install the .info pages
 info_TEXINFOS = pgify.texinfo

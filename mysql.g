@@ -62,8 +62,9 @@ tokens {
 	T_LOCK_TABLE;
 	
 	T_SELECT_STATEMENT;
-	T_SHOW_TABLES_LIKE;
-	T_SHOW_TABLES_FROM;
+	T_SHOW_LIKE;
+	T_SHOW_FROM;
+	T_SHOW_COLUMNS;
 	
 	T_SHOW_TABLES;
 	
@@ -95,6 +96,7 @@ start_rule
         |   use_database_statement
         |	show_databases_statement
         |	show_tables_statement
+        |	show_columns_statement
         |	lock_tables_statement
         |	unlock_tables_statement
         |	SEMI
@@ -159,29 +161,47 @@ show_databases_statement
    ================================================================================ */
 show_tables_statement
 	: K_SHOW K_FULL? 'TABLES'
-	show_tables_from?
-	( show_tables_like | show_tables_where )?
+	show_from?
+	( show_tables_like | show_where )?
 	SEMI?
 	-> ^(T_SHOW_TABLES
 	K_SHOW K_FULL? 'TABLES'
-	show_tables_from?
+	show_from?
 	show_tables_like?
-	show_tables_where?
+	show_where?
 	SEMI? )
 	;
 
-show_tables_from
-	: ( K_FROM | K_IN ) identifier
-	-> ^(T_SHOW_TABLES_FROM identifier)
+show_from
+	: ( K_FROM | K_IN ) sql_identifier
+	-> ^(T_SHOW_FROM sql_identifier)
 	;
 	
 show_tables_like
 	: K_LIKE quoted_string
-	-> ^(T_SHOW_TABLES_LIKE K_LIKE quoted_string)
+	-> ^(T_SHOW_LIKE K_LIKE quoted_string)
 	;
 	
-show_tables_where
+show_where
 	: where_clause
+	;
+
+/* ================================================================================
+   SHOW COLUMNS statement
+   ================================================================================ */
+show_columns_statement
+	: K_SHOW K_FULL? ( 'COLUMNS' | 'FIELDS' )
+	show_from /* table */
+	show_from? /* db */
+	( show_tables_like | show_where )?
+	SEMI?
+	-> ^(T_SHOW_COLUMNS
+	K_SHOW K_FULL?
+	show_from /* table */
+	show_from? /* db */
+	show_tables_like?
+	show_where?
+	SEMI? )
 	;
 	
 /* ================================================================================
