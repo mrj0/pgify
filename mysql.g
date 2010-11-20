@@ -710,7 +710,7 @@ function_expression_concat_ws
 	;
 	
 function_expression_concat_ws_parameters
-	: sql_identifier ( COMMA sql_identifier )*
+	: call_parameter ( COMMA call_parameter )*
 	;
 	
 function_expression_normal
@@ -875,15 +875,16 @@ boolean_literal
 	:	K_TRUE | K_FALSE
 	;
 
+c_alias
+	: K_AS sql_identifier
+	| K_AS
+	| t_alias
+	;
+
 t_alias
 	: //sql_identifier
 	/* have to be more restrictive because this is matching 'limit' */
 	ID | BACKQUOTED_STRING | QUOTED_STRING
-	;
-
-c_alias
-	: (K_AS? sql_identifier) //{ $alias_name->setType($alias_name, T_ALIAS); }
-	| K_AS
 	;
 
 alias
@@ -949,7 +950,7 @@ sql_identifier
 table_reference_list
 	:	(
 			(join_clause|(LPAREN join_clause RPAREN)|table_reference)
-			(COMMA (join_clause|(LPAREN join_clause RPAREN)|table_reference))*
+			(COMMA? (join_clause|(LPAREN join_clause RPAREN)|table_reference))*
 		)
 //	->('t_from' join_clause? LPAREN? join_clause? RPAREN? table_reference?
 //                (COMMA (join_clause|(LPAREN join_clause RPAREN)|table_reference))*
@@ -957,7 +958,7 @@ table_reference_list
 	;            
 table_reference
 	:	((K_ONLY LPAREN query_table_expression RPAREN)
-	|	query_table_expression /*( pivot_clause | unpivot_clause )?*/) flashback_query_clause? t_alias?
+	|	query_table_expression /*( pivot_clause | unpivot_clause )?*/) flashback_query_clause? c_alias?
 	;
 query_table_expression
 	:	//query_name
@@ -991,7 +992,7 @@ join_clause
 	:	table_reference (inner_cross_join_clause|outer_join_clause)+
 	;
 inner_cross_join_clause
-	:	K_INNER? K_JOIN table_reference ((K_ON sql_condition)|(K_USING LPAREN column_specs RPAREN))
+	:	K_INNER? K_JOIN table_reference c_alias? ((join_clause_on)|(K_USING LPAREN column_specs RPAREN))?
     |	(K_CROSS | K_NATURAL K_INNER?) (K_JOIN table_reference)
 	;        
 outer_join_clause
@@ -999,7 +1000,11 @@ outer_join_clause
 		(	outer_join_type K_JOIN
 		|	K_NATURAL ( outer_join_type )? K_JOIN
 		)
-		table_reference ( query_partition_clause )? ( K_ON sql_condition | K_USING LPAREN column_specs RPAREN )?
+		table_reference ( query_partition_clause )? ( join_clause_on | K_USING LPAREN column_specs RPAREN )?
+	;
+join_clause_on
+	: K_ON sql_condition
+	where_clause?
 	;
 query_partition_clause
 	:	K_PARTITION K_BY expression_list

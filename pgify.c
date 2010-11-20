@@ -672,8 +672,8 @@ static void show_tables_rewrite(WalkerState ws, pANTLR3_BASE_TREE base) {
         "          UNION SELECT table_name,\n"
         "                'VIEW'\n"
         "           FROM information_schema.views\n"
-        "          WHERE table_schema = %s\n"
-        "          ORDER BY 1 ) sub\n"                    /* schema */
+        "          WHERE table_schema = %s\n"             /* schema */
+        "          ORDER BY 1 ) sub\n"
         "%s\n";                                           /* where or like */
 
     int from, like, full, show;
@@ -768,7 +768,7 @@ static show_columns_rewrite(WalkerState ws, pANTLR3_BASE_TREE base) {
         "  FROM information_schema.COLUMNS c\n"
         " WHERE c.table_catalog = current_database ( )\n"
         "   AND c.table_name = '%s'\n"                                        /* table */
-        "   AND c.table_schema = '%s'\n"                                      /* schema */
+        "   AND c.table_schema = %s\n"                                        /* schema */
         " ORDER BY c.ordinal_position ) SUB\n"
         "%s\n";                                                               /* where or like */
 
@@ -780,7 +780,7 @@ static show_columns_rewrite(WalkerState ws, pANTLR3_BASE_TREE base) {
     table = g_string_new("");
 
     static const char *full_columns = "*";
-    static const char *normal_columns = "field, type, null, key, default, extra";
+    static const char *normal_columns = "field, type, \"null\", key, \"default\", extra";
 
     const char *columns = normal_columns;
     char *where = "";
@@ -822,7 +822,7 @@ static show_columns_rewrite(WalkerState ws, pANTLR3_BASE_TREE base) {
         low = get_lower_text(child);
         unquoted = unquote(low);
         
-        g_string_append(schema, unquoted);
+        g_string_append_printf(schema, "'%s'", unquoted);
 
         base->deleteChild(base, from_schema);
         g_free(low);
