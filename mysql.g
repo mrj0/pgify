@@ -67,8 +67,12 @@ tokens {
 	T_SHOW_COLUMNS;
 	
 	T_SHOW_TABLES;
-	
+
+	T_CALL_PARAMETER;
 	T_FUNCTION_NAME;
+	T_FUNCTION_NULLIF;
+	T_FUNCTION_IFNULL;
+	T_FUNCTION_IF;
 	
 	T_WHERE;
 	
@@ -637,7 +641,7 @@ displayed_column
 	: (
         asterisk1=ASTERISK
 		| schema=sql_identifier DOT asterisk2=ASTERISK
-		| sql_expression
+		| sql_condition
 		)   
 		(alias|alias_name=sql_identifier)?
 //        -> ^('t_select_column' $asterisk1? $schema? DOT? $asterisk2? sql_expression? alias? $alias_name? )
@@ -660,7 +664,10 @@ expr_sign // in fact this is not "sign" but unary operator
 	:	( PLUS | MINUS | K_PRIOR | K_CONNECT_BY_ROOT )? expr_pow
 	;
 expr_pow
-	:	expr_expr ( EXPONENT expr_expr )*
+	:	expr_like ( EXPONENT expr_like )*
+	;
+expr_like
+	:	expr_expr( K_LIKE QUOTED_STRING ) ?
 	;
 expr_expr
 	:	datetime_expression
@@ -692,11 +699,28 @@ expr_paren
 nested_expression
 	:	sql_expression
 	;
-	
 function_expression
 	: function_expression_concat_ws
 	| function_expression_concat
+	| function_expression_nullif
+	| function_expression_ifnull
+	| function_expression_if
 	| function_expression_normal
+	;
+	
+function_expression_nullif
+	: K_NULLIF LPAREN call_parameter COMMA call_parameter RPAREN
+	-> ^( T_FUNCTION_NULLIF K_NULLIF LPAREN call_parameter COMMA call_parameter RPAREN )
+	;
+
+function_expression_ifnull
+	: K_IFNULL LPAREN call_parameter COMMA call_parameter RPAREN
+	-> ^( T_FUNCTION_IFNULL T_TRANSFORM[" COALESCE "] LPAREN call_parameter T_TRANSFORM["::text "] COMMA call_parameter T_TRANSFORM["::text "] RPAREN )
+	;
+
+function_expression_if
+	: K_IF LPAREN call_parameter COMMA call_parameter COMMA call_parameter RPAREN
+	-> ^( T_FUNCTION_IF call_parameter call_parameter call_parameter )
 	;
 
 function_expression_concat
@@ -705,11 +729,11 @@ function_expression_concat
 	;
 	
 function_expression_concat_ws
-	: K_CONCAT_WS LPAREN sql_identifier COMMA function_expression_concat_ws_parameters RPAREN
-	-> LPAREN[" ARRAY_TO_STRING(ARRAY["] function_expression_concat_ws_parameters T_TRANSFORM["], "] sql_identifier RPAREN
+	: K_CONCAT_WS LPAREN sql_identifier COMMA function_expression_parameters RPAREN
+	-> LPAREN[" ARRAY_TO_STRING(ARRAY["] function_expression_parameters T_TRANSFORM["], "] sql_identifier RPAREN
 	;
 	
-function_expression_concat_ws_parameters
+function_expression_parameters
 	: call_parameter ( COMMA call_parameter )*
 	;
 	
@@ -722,8 +746,9 @@ call_parameters
 	: ASTERISK
 	| call_parameter ( COMMA call_parameter )*
 	;
-call_parameter
-	:	 ( parameter_name ARROW )? nested_expression
+call_parameter //options { backtrack=false; }
+	:	 nested_expression
+	-> ^(T_CALL_PARAMETER nested_expression)
 	;
 parameter_name
 	:	identifier
@@ -1132,6 +1157,7 @@ condition_expr
 	|	condition_equals_path
 	|	condition_under_path
 	|	condition_paren
+	|	sql_expression
 	;
 
 condition_exists
@@ -1641,7 +1667,7 @@ reserved_word options { backtrack=false; }
 	| 'SELECT'	| 'SESSION'	| 'SET'	| 'SHARE'	| 'SIZE'	| 'SMALLINT'	| 'SQLBUF'	
 	| 'START'	| 'SUCCESSFUL'	| 'SYNONYM'	| 'SYSDATE'	
 	| 'TABLE'	| 'THEN'	| 'TO'	| 'TRIGGER'	| 'TINYINT'
-	| 'UID'	| 'UNION'	| 'UNIQUE'	| 'UPDATE'	| 'USER'	
+	| 'UID'	| 'UNION'	| 'UNIQUE'	| 'UPDATE'
 	| 'VALIDATE'	| 'VALUES'	| 'VARCHAR'	| 'VARCHAR2'	| 'VIEW'	
 	| 'WHENEVER'	| 'WHERE'	| 'WITH'
 	| 'TEXT' | 'MEDIUMTEXT' | 'SHOW'
@@ -2019,6 +2045,8 @@ STUPID_MYSQL_TIMESTAMP : '\'0000-00-00 00:00:00\''  { SETTEXT(GETTEXT()->factory
 
 K_CONCAT: 'CONCAT' ;
 K_CONCAT_WS: 'CONCAT_WS' ;
+K_NULLIF: 'NULLIF'	;
+K_IFNULL: 'IFNULL'	;
 
 keyword
 	: 'A' // note: this one is not listed in the docs but is a part of "IS A SET" condition clause
@@ -2115,6 +2143,9 @@ keyword
     | 'MYISAM'
     | 'CONCAT'
     | 'CONCAT_WS'
+    | 'USER'
+    | 'NULLIF'
+    | 'IFNULL'
 	;
 
 quoted_string

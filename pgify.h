@@ -54,6 +54,7 @@ struct _pgify_tree_struct {
     mysqlParser_start_rule_return   langAST;
     pANTLR3_VECTOR                  tokens;
     WalkerState                     ws;
+    int                             error_count;
 };
 typedef struct _pgify_tree_struct PgifyTree, *pPgifyTree;
 

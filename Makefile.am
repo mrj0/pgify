@@ -49,7 +49,11 @@ TESTS=test/testSimple.sh \
 	test/testshowtables.sh \
 	test/testconcatws.sh \
 	test/testshowcolumns.sh \
-	test/testinnerjoin.sh
+	test/testinnerjoin.sh \
+	test/testmerge.sh \
+	test/testnullif.sh \
+	test/testifnull.sh \
+	test/testselectcondition.sh
 
 #  build and install the .info pages
 info_TEXINFOS = pgify.texinfo
