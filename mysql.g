@@ -1387,7 +1387,19 @@ order_by_clause_part_next
    ================================================================================ */
 limit_clause
 	: // [LIMIT {[offset,] row_count | row_count OFFSET offset}]
-	( K_LIMIT ( NUMBER ',' )? NUMBER ) | ( K_LIMIT NUMBER K_OFFSET NUMBER )
+	limit_num_num_clause | ( K_LIMIT NUMBER K_OFFSET NUMBER )
+	;
+	
+// not supported as-is
+limit_num_num_clause
+	:
+	K_LIMIT limit_num_num_offset? NUMBER
+	-> K_LIMIT NUMBER limit_num_num_offset?
+	;
+
+limit_num_num_offset
+	: NUMBER COMMA
+	-> T_TRANSFORM[" OFFSET "] NUMBER
 	;
 
 /* ================================================================================

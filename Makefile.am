@@ -53,7 +53,8 @@ TESTS=test/testSimple.sh \
 	test/testmerge.sh \
 	test/testnullif.sh \
 	test/testifnull.sh \
-	test/testselectcondition.sh
+	test/testselectcondition.sh \
+	test/testoffset.sh
 
 #  build and install the .info pages
 info_TEXINFOS = pgify.texinfo
