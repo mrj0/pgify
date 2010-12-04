@@ -40,12 +40,18 @@ extern "C" {
 #endif
 
 struct walker_state_struct {
-    pmysqlParser psr;
-    gchar *schemaName;
-    GString *postbuf;
-    int *options;
+    pmysqlParser  psr;
+    gchar        *schemaName;
+    GString      *postbuf;
+    gint          options;
+    glong         found_rows;
 };
 typedef struct walker_state_struct *WalkerState;
+
+
+WalkerState walkerstate_new(gint pgoptions);
+void walkerstate_free(WalkerState);
+
 
 struct _pgify_tree_struct {
     pANTLR3_COMMON_TOKEN_STREAM     tstream;
@@ -60,9 +66,9 @@ typedef struct _pgify_tree_struct PgifyTree, *pPgifyTree;
 
 void pgifytree_free(pPgifyTree);
 
-pPgifyTree pgify(pANTLR3_INPUT_STREAM, int options);
-gchar* pgify_string(pANTLR3_INPUT_STREAM, int options);
-gchar* pgify_string_s(const char *, int options);
+pPgifyTree pgify(pANTLR3_INPUT_STREAM, WalkerState);
+gchar* pgify_string(pANTLR3_INPUT_STREAM, WalkerState);
+gchar* pgify_string_s(const char *, WalkerState);
 gchar* pgify_string_tree(pPgifyTree);
 
 
@@ -77,8 +83,8 @@ gchar* pgify_string_tree(pPgifyTree);
  */
 #define PGIFY_ESCAPE 2
 
-#define PGIFY_IS_DEBUG(options)  (*(int *) options) & PGIFY_DEBUG
-#define PGIFY_IS_ESCAPE(options) (*(int *) options) & PGIFY_ESCAPE
+#define PGIFY_IS_DEBUG(options)  (*(gint *) options) & PGIFY_DEBUG
+#define PGIFY_IS_ESCAPE(options) (*(gint *) options) & PGIFY_ESCAPE
 
 #ifdef __cplusplus
 }

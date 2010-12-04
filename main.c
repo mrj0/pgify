@@ -73,7 +73,13 @@ int ANTLR3_CDECL main(int argc, char **argv) {
         input = antlr3NewAsciiStringCopyStream((pANTLR3_UINT8) sql, len, NULL);
     }
 
-    gchar *pg = pgify_string(input, pgoptions);
+    WalkerState ws = walkerstate_new(pgoptions);
+    if(ws == NULL) {
+        fprintf(stderr, "Unable to create WalkerState due to malloc() failure\n");
+        exit(1);
+    }
+
+    gchar *pg = pgify_string(input, ws);
     if(pg) {
         printf("%s", pg);
         g_free(pg);
@@ -81,6 +87,8 @@ int ANTLR3_CDECL main(int argc, char **argv) {
 
     input->close(input);
     input = NULL;
+    walkerstate_free(ws);
+    ws = NULL;
     exit(0);
 }
 

@@ -75,6 +75,7 @@ tokens {
 	T_FUNCTION_IF;
 	
 	T_WHERE;
+	T_LIMIT;
 	
 	T_TRANSFORM; /* used when adding new statements during tree walk */
 }
@@ -705,7 +706,13 @@ function_expression
 	| function_expression_nullif
 	| function_expression_ifnull
 	| function_expression_if
+	| function_expression_found_rows
 	| function_expression_normal
+	;
+	
+function_expression_found_rows
+	: K_FOUND_ROWS LPAREN RPAREN
+	-> K_FOUND_ROWS
 	;
 	
 function_expression_nullif
@@ -1387,7 +1394,8 @@ order_by_clause_part_next
    ================================================================================ */
 limit_clause
 	: // [LIMIT {[offset,] row_count | row_count OFFSET offset}]
-	limit_num_num_clause | ( K_LIMIT NUMBER K_OFFSET NUMBER )
+	( limit_num_num_clause | K_LIMIT NUMBER K_OFFSET NUMBER )
+	-> ^( T_LIMIT limit_num_num_clause? K_LIMIT NUMBER K_OFFSET NUMBER? )
 	;
 	
 // not supported as-is
@@ -2059,6 +2067,7 @@ K_CONCAT: 'CONCAT' ;
 K_CONCAT_WS: 'CONCAT_WS' ;
 K_NULLIF: 'NULLIF'	;
 K_IFNULL: 'IFNULL'	;
+K_FOUND_ROWS: 'FOUND_ROWS'	;
 
 keyword
 	: 'A' // note: this one is not listed in the docs but is a part of "IS A SET" condition clause
@@ -2158,6 +2167,7 @@ keyword
     | 'USER'
     | 'NULLIF'
     | 'IFNULL'
+    | 'FOUND_ROWS'
 	;
 
 quoted_string
