@@ -55,7 +55,8 @@ TESTS=test/testSimple.sh \
 	test/testifnull.sh \
 	test/testselectcondition.sh \
 	test/testoffset.sh \
-	test/testfoundrows.sh
+	test/testfoundrows.sh \
+	test/testinterval.sh
 
 #  build and install the .info pages
 info_TEXINFOS = pgify.texinfo

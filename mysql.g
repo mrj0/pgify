@@ -804,12 +804,22 @@ datetime_expression
         K_AT (K_LOCAL | K_TIME K_ZONE ( quoted_string | K_DBTIMEZONE | K_SESSIONTIMEZONE | sql_expression ));
 
 interval_expression
-	:
-		LPAREN ( function_expression | cast_expression | simple_expression ) MINUS ( function_expression | cast_expression | simple_expression ) RPAREN
-		(	K_DAY (LPAREN NUMBER RPAREN)? K_TO K_SECOND (LPAREN NUMBER RPAREN)?
-		|	K_YEAR (LPAREN NUMBER RPAREN)? K_TO K_MONTH (LPAREN NUMBER RPAREN)?
-		)
+	:	K_INTERVAL NUMBER interval_expr_num_unit
+		-> K_INTERVAL T_TRANSFORM["'"] NUMBER interval_expr_num_unit T_TRANSFORM["'"]
 	;
+	
+interval_expr_num_unit
+	:	'MICROSECOND'
+	|	'SECOND'
+	|	'MINUTE'
+	|	'HOUR'
+	|	'DAY'
+	|	'WEEK'
+	|	'MONTH'
+	|	'QUARTER'
+	|	'YEAR'
+	;
+	
 /* ================================================================================
    Special expressions
    ================================================================================ */
