@@ -48,6 +48,7 @@ static struct option const long_options[] = {
     {"version", no_argument, 0, 'V'},
     {"debug", no_argument, 0, 'd'},
     {"escape", no_argument, 0, 'e'},
+    {"lowercase", no_argument, 0, 'c'},
     {NULL, 0, NULL, 0}
 };
 
@@ -100,6 +101,7 @@ static int decode_switches(int argc, char **argv, int *pgoptions) {
 
     int debug = FALSE;
     int escape = TRUE;
+    int lowercase = TRUE;
 
     while((c = getopt_long(
                argc,
@@ -108,6 +110,7 @@ static int decode_switches(int argc, char **argv, int *pgoptions) {
                "h"              /* help */
                "d"              /* debug */
                "e"              /* escape */
+               "c"              /* lowercase */
                "V",             /* version */
                long_options,
                (int *) 0)) != EOF) {
@@ -131,6 +134,10 @@ static int decode_switches(int argc, char **argv, int *pgoptions) {
             escape = FALSE;
             break;
 
+        case 'c':
+            lowercase = FALSE;
+            break;
+
         default:
             usage(EXIT_FAILURE);
         }
@@ -140,6 +147,8 @@ static int decode_switches(int argc, char **argv, int *pgoptions) {
         *pgoptions |= PGIFY_DEBUG;
     if(escape)
         *pgoptions |= PGIFY_ESCAPE;
+    if(lowercase)
+        *pgoptions |= PGIFY_LOWERID;
 
     return 0;
 }
@@ -156,6 +165,7 @@ Options:\n\
   -V, --version              output version information and exit\n\
   -d, --debug                print debug statement structure to stderr\n\
   -e, --escape               convert backslash escapes to ANSI standards(default true)\n\
+  -c, --lowercase            convert backtic quoted strings to lowercase(default true)\n\
 "));
     exit(status);
 }

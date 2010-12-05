@@ -2350,14 +2350,16 @@ BACKQUOTED_STRING
 		str = str->subString(str, 1, str->len - 1);
 		str->insert(str, 0, "\"");
 		str->append(str, "\"");
-		
-		// mysql backticks are case-insensitive
-		str = str->toUTF8(str);
-		//printf("\%s len \%i\n", str->chars, str->len);
-		gchar *lower = g_utf8_strdown(str->chars, -1);
-		str->set(str, lower);
-		g_free(lower);
-		
+			
+		if(PGIFY_IS_LOWERID(LEXSTATE->userp)) {
+			// mysql backticks are case-insensitive
+			str = str->toUTF8(str);
+			//printf("\%s len \%i\n", str->chars, str->len);
+			gchar *lower = g_utf8_strdown(str->chars, -1);
+			str->set(str, lower);
+			g_free(lower);
+		}
+			
 		SETTEXT(str);
 	}
 	;

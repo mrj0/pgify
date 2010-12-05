@@ -82,9 +82,15 @@ gchar* pgify_string_tree(pPgifyTree);
  *
  */
 #define PGIFY_ESCAPE 2
+/**
+ * Lowercase backquoted identifiers.
+ *
+ */
+#define PGIFY_LOWERID 4
 
 #define PGIFY_IS_DEBUG(options)  (*(gint *) options) & PGIFY_DEBUG
 #define PGIFY_IS_ESCAPE(options) (*(gint *) options) & PGIFY_ESCAPE
+#define PGIFY_IS_LOWERID(options) (*(gint *) options) & PGIFY_LOWERID
 
 #ifdef __cplusplus
 }
