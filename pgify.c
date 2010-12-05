@@ -877,9 +877,15 @@ static void use_database_worker(WalkerState ws, pANTLR3_BASE_TREE basetree, pANT
     pos = look_ahead_index(tree, 0, ID);
     if(pos > -1) {
         pANTLR3_BASE_TREE schema = tree->getChild(tree, pos);
+        token = schema->getToken(schema);
+        str = schema->getText(schema);
+
         if(ws->schemaName)
             g_free(ws->schemaName);
-        ws->schemaName = g_strdup_printf("%s.", schema->getText(schema)->chars);
+        ws->schemaName = g_strdup_printf("%s.", str->chars);
+
+        str->append8(str, ",public");
+        token->setText(token, str);
     }
 }
 
