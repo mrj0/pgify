@@ -894,7 +894,7 @@ static void delete_tree_children(pANTLR3_BASE_TREE tree) {
     ANTLR3_UINT32 n, c;
     n = tree->getChildCount(tree);
 
-    for(c = 0; c < n ; c++)
+    for(c = 0; c < n; c++)
         tree->deleteChild(tree, 0);
 }
 

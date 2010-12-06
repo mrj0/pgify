@@ -701,13 +701,25 @@ nested_expression
 	:	sql_expression
 	;
 function_expression
-	: function_expression_concat_ws
-	| function_expression_concat
-	| function_expression_nullif
-	| function_expression_ifnull
-	| function_expression_if
-	| function_expression_found_rows
-	| function_expression_normal
+	:	function_year
+	|	function_month
+	|	function_expression_concat_ws
+	|	function_expression_concat
+	|	function_expression_nullif
+	|	function_expression_ifnull
+	|	function_expression_if
+	|	function_expression_found_rows
+	|	function_expression_normal
+	;
+	
+function_year
+	: K_YEAR LPAREN call_parameter RPAREN
+	-> T_TRANSFORM[" EXTRACT "] LPAREN K_YEAR T_TRANSFORM[" FROM "] call_parameter RPAREN
+	;
+	
+function_month
+	: K_MONTH LPAREN call_parameter RPAREN
+	-> T_TRANSFORM[" EXTRACT "] LPAREN K_MONTH T_TRANSFORM[" FROM "] call_parameter RPAREN
 	;
 	
 function_expression_found_rows
