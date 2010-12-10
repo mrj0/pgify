@@ -216,7 +216,7 @@ create_database_statement
 	: K_CREATE K_DATABASE identifier
 	create_database_options*
 	SEMI?
-	-> K_CREATE K_DATABASE["SCHEMA"] identifier SEMI?
+	-> K_CREATE K_DATABASE[" SCHEMA"] identifier SEMI?
 	/* todo charset options */
 	;
 	
@@ -433,7 +433,7 @@ drop_statement
 	table_list
     ( K_RESTRICT | K_CASCADE )?
     SEMI?
-    -> K_DROP K_TEMPORARY? K_TABLE? K_DATABASE["SCHEMA"]?
+    -> K_DROP K_TEMPORARY? K_TABLE? K_DATABASE[" SCHEMA"]?
     K_IF? K_EXISTS?
     table_list
     SEMI?

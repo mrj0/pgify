@@ -7,7 +7,7 @@ LOCK TABLES \`maint\` WRITE;
 EOF
 
 cat > "$expected" <<EOF
-
+   
 EOF
 
 pgify

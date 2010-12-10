@@ -1,4 +1,4 @@
-diff="diff -uw"
+diff="diff -u"
 input=test/input
 output=test/pgout
 expected=test/expected

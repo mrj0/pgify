@@ -7,7 +7,7 @@ select database();
 EOF
 
 cat > "$expected" <<EOF
-select current_schema();
+select current_schema  ();
 EOF
 
 pgify
