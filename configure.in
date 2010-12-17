@@ -25,9 +25,57 @@ dnl Checks for header files.
 AC_HEADER_STDC
 AC_CHECK_HEADERS(unistd.h sys/param.h sys/time.h time.h sys/mkdev.h sys/sysmacros.h string.h memory.h fcntl.h dirent.h sys/ndir.h ndir.h alloca.h locale.h )
 
-dnl Check for antlr3
-AC_CHECK_HEADERS(antlr3.h)
-AC_CHECK_LIB(antlr3c, [antlr3ParserNew])
+AC_DEFUN([MRJ_CHECK_ANTLR3],
+[
+  AC_MSG_CHECKING([for ANTLR3])
+
+  cflags_antlr_save=$CXXFLAGS
+  ldflags_antlr_save=$LDFLAGS
+  libs_antlr_save=$LIBS
+
+  antlr_cflags=
+  antlr_ldflags=
+  antlr_libs=-lantlr3c
+
+  AC_ARG_WITH([antlr-includes],
+    AS_HELP_STRING([--with-antlr-includes=DIR]. [set antlr include dir]),
+    [ antlr_cflags="-I$withval" ], [])
+
+  AC_ARG_WITH([antlr-libraries],
+    AS_HELP_STRING([--with-antlr-libraries=DIR], [set antlr lib dir]),
+    [ antlr_ldflags="-L$withval" ], [])
+
+  CFLAGS="$CFLAGS $antlr_cflags"
+  LDFLAGS="$LDFLAGS $antlr_ldflags"
+  LIBS="$LIBS $antlr_libs"
+  
+  AC_RUN_IFELSE([[
+#include <antlr3.h>
+
+    int main(int c, char **v) {
+      antlr3ParserNew;
+      return 0;
+    }
+  ]], [found_antlr=yes],
+  [found_antlr=no], )
+
+  if test $found_antlr = no; then
+    AC_MSG_ERROR([
+Couldn't find libantlr3. Download and install from http://www.antlr.org/download/C])
+  fi
+
+  AC_MSG_RESULT(yes)
+  CFLAGS=$cflags_antlr_save
+  AC_SUBST(ANTLR_CFLAGS, $antlr_cflags)
+  
+  LDFLAGS=$ldflags_antlr_save
+  AC_SUBST(ANTLR_LDFLAGS, $antlr_ldflags)
+  
+  LIBS=$libs_antlr_save
+  AC_SUBST(ANTLR_LIBS, $antlr_libs)
+])
+
+MRJ_CHECK_ANTLR3
 PKG_CHECK_MODULES([glib], glib-2.0 >= 2.4)
 
 CFLAGS="$CFLAGS $glib_CFLAGS"

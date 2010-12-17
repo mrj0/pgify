@@ -1,8 +1,12 @@
+AM_LDFLAGS=$(ANTLR_LDFLAGS)
+AM_CFLAGS=$(ANTLR_CFLAGS)
+
 BUILT_SOURCES = mysqlLexer.c mysqlParser.c 
 
 bin_PROGRAMS=pgify
 lib_LTLIBRARIES=libpgify.la
 pgify_SOURCES=main.c
+pgify_LDFLAGS=$(ANTLR_LIBS)
 
 libpgify_la_SOURCES=pgify.c pgify.1 xmalloc.c system.h aclocal.m4 getopt.c getopt1.c getopt.h $(BUILT_SOURCES)
 libpgify_ladir=$(libdir)/pkgconfig
@@ -16,7 +20,7 @@ mysqlParser.c: mysql.g
 
 # http://www.gnu.org/software/automake/manual/html_node/Libtool-Libraries.html#Libtool-Libraries
 
-libpgify_la_LIBADD=$(glib_LIBS)
+libpgify_la_LIBADD=$(glib_LIBS) $(ANTLR_LIBS)
 pgify_LDADD=libpgify.la
 
 EXTRA_DIST=pgify.lsm.in pgify.spec.in pgify.texinfo autogen.sh \

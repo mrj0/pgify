@@ -19,9 +19,6 @@
    */
 #define HAVE_ALLOCA_H 1
 
-/* Define to 1 if you have the <antlr3.h> header file. */
-#define HAVE_ANTLR3_H 1
-
 /* Define to 1 if you have the <dirent.h> header file, and it defines `DIR'.
    */
 #define HAVE_DIRENT_H 1
@@ -34,9 +31,6 @@
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #define HAVE_INTTYPES_H 1
-
-/* Define to 1 if you have the `antlr3c' library (-lantlr3c). */
-#define HAVE_LIBANTLR3C 1
 
 /* Define to 1 if you have the <locale.h> header file. */
 #define HAVE_LOCALE_H 1
